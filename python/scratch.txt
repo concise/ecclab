@@ -60,3 +60,42 @@ How to parse an X.509 certificate?
     https://www.rfc-editor.org/errata_search.php?rfc=5280
     https://tools.ietf.org/html/rfc6818
 
+Convert (k, l, m) into a public key, a signature, and an integer to be signed
+
+        Parse an X.509 certificate      Extract the public key
+    c' ----------------------------> c ------------------------> k
+ OctetStr                          X509Cert                   OctetStr
+
+
+       X9.62 public key decode
+    k -------------------------> Q != 0
+ OctetStr                        E
+
+
+       ASN.1 decode
+    l --------------> r != 0  and  s != 0
+ OctetStr            GFq          GFq
+
+
+       hash       keep at most qlen bits        to int       mod q
+    m ------> m' ------------------------> m'' --------> h' -------> h
+ OctetStr   OctetStr                      BitStr        UInt        GFq
+
+
+
+E
+    q                   an integer          a large prime
+    G                   an element in E     the generator
+    Z                   an element in E     the additive identity of E
+    ( ... ) \in E       unary operator      check if X is an element of E
+    ( ... ) == ( ... )  binary operator     check if X equals to Y
+    -( ... )            unary operator      take the negative of X
+    ( ... )[2]          unary operator      take the double of X
+    ( ... ) + ( ... )   binary operator     add X and Y together
+    ( ... )[ ... ]      binary operator     scalarmultiply X by n
+
+additional procedures related to E
+
+    convert_the_x_coordinate_to_an_integer_mod_the_prime_group_size
+    convert_the_x962_encoded_public_key_octet_string_back_to_a_group_element
+
