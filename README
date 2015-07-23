@@ -1,0 +1,10 @@
+In this repository, I will try to implement the signature generation and the
+signature verification procedures for ECDSA.  The first curve I am going to
+play with is secp256r1.  Note that the curve secp256r1 may have a different
+name based on which context we are in.  Here are three commonly used names for
+the same curve:
+
+    - secp256r1 (SECG SEC 2)
+    - prime256v1 (ANSI X9.62)
+    - P-256 (NIST)
+
