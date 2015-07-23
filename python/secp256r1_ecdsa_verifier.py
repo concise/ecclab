@@ -257,20 +257,38 @@ def is_valid_Q_h_r_s_ecdsa_quadruple(Q, h, r, s):
     # ECGroup operations
     #
 
+    def SOME_GROUP_ELEMENT_IS_REPRESENTED_BY(P):
+        if (type(P) is tuple
+        and len(P) == 2
+        and type(P[0]) is int
+        and type(P[1]) is int
+        ):
+            XP, YP = P
+            XZ, YZ = Z
+            if ((XP - XZ) % p == 0 and (YP - YZ) % p == 0):
+                return True
+            if (XP**3 + a*XP + b - YP**2) % p == 0:
+                return True
+        return False
+
     def EQ(P, Q):
-        X1, Y1 = P
-        X2, Y2 = Q
-        return (X1 - X2) % p == 0 and (Y1 - Y2) % p == 0
+        assert SOME_GROUP_ELEMENT_IS_REPRESENTED_BY(P)
+        assert SOME_GROUP_ELEMENT_IS_REPRESENTED_BY(Q)
+        XP, YP = P
+        XQ, YQ = Q
+        return (XP - XQ) % p == 0 and (YP - YQ) % p == 0
 
     def NEG(P):
-        assert on_curve(P) or EQ(P, Z)
+        assert SOME_GROUP_ELEMENT_IS_REPRESENTED_BY(P)
         if EQ(P, Z):
             return Z
-        X, Y = P
-        return X, -Y % p
+        XP, YP = P
+        XR = XP
+        YR = -YP % p
+        return XR, YR
 
     def DBL(P):
-        assert on_curve(P) or EQ(P, Z)
+        assert SOME_GROUP_ELEMENT_IS_REPRESENTED_BY(P)
         if EQ(P, Z):
             return Z
         XP, YP = P
@@ -280,8 +298,8 @@ def is_valid_Q_h_r_s_ecdsa_quadruple(Q, h, r, s):
         return XR, YR
 
     def ADD(P, Q):
-        assert on_curve(P) or EQ(P, Z)
-        assert on_curve(Q) or EQ(Q, Z)
+        assert SOME_GROUP_ELEMENT_IS_REPRESENTED_BY(P)
+        assert SOME_GROUP_ELEMENT_IS_REPRESENTED_BY(Q)
         assert not EQ(P, Q)
         if EQ(P, Z):
             return Q
@@ -289,6 +307,8 @@ def is_valid_Q_h_r_s_ecdsa_quadruple(Q, h, r, s):
             return P
         if EQ(P, NEG(Q)):
             return Z
+        if EQ(P, Q):
+            return DBL(P)
         X1, Y1 = P
         X2, Y2 = Q
         t = ((Y1 - Y2) * modinv(X1 - X2, p)) % p
@@ -296,26 +316,7 @@ def is_valid_Q_h_r_s_ecdsa_quadruple(Q, h, r, s):
         Y3 = (t * (X1 - X3) - Y1) % p
         return X3, Y3
 
-    def ECGroup_to_GFq(M):
-        assert on_curve(M)
-        X, Y = M
-        return X % q
-
-    def ECGroup_ADD(P, Q):
-        assert on_curve(P) or EQ(P, Z)
-        assert on_curve(Q) or EQ(Q, Z)
-        if EQ(P, Z):
-            return Q
-        elif EQ(Q, Z):
-            return P
-        elif EQ(P, NEG(Q)):
-            return Z
-        elif EQ(P, Q):
-            return DBL(P)
-        else:
-            return ADD(P, Q)
-
-    def ECGroup_MUL(Q, k):
+    def MUL(Q, k):
         assert on_curve(Q) or EQ(Q, Z)
         if EQ(Q, Z):
             return Z
@@ -329,20 +330,27 @@ def is_valid_Q_h_r_s_ecdsa_quadruple(Q, h, r, s):
             T = DBL(T)
         return R
 
+    def TAKE_X_COORD_MOD_q_(M):
+        assert on_curve(M)
+        X, Y = M
+        return X % q
+
     #
     # (Q, h, r, s) is a valid ECDSA quadruple iff the equality holds:
     #
-    #       r == ECGroup_to_GFq( G[h/s] + Q[r/s] )
+    #       r == TAKE_X_COORD_MOD_q_( G[h/s] + Q[r/s] )
     #
 
-    assert on_curve(Q)
-    assert 0 <= h <= q-1
-    assert 1 <= r <= q-1
-    assert 1 <= s <= q-1
-    computed_r_to_be_checked = ECGroup_to_GFq(ECGroup_ADD(
-            ECGroup_MUL(G, GFq_mul(h, GFq_inv(s))),
-            ECGroup_MUL(Q, GFq_mul(r, GFq_inv(s)))))
+    assert SOME_GROUP_ELEMENT_IS_REPRESENTED_BY(Q) and not EQ(Q, Z)
+    assert 0 <= h and h <= q-1
+    assert 1 <= r and r <= q-1
+    assert 1 <= s and s <= q-1
+    computed_r_to_be_checked = TAKE_X_COORD_MOD_q_(ADD(
+            MUL(G, GFq_mul(h, GFq_inv(s))),
+            MUL(Q, GFq_mul(r, GFq_inv(s)))
+            ))
     return GFq_eq(r, computed_r_to_be_checked)
 
 def extract_ecdsa_publickey_from_an_x509_certificate(*_, **__):
     return NotImplementedError # TODO
+
