@@ -96,6 +96,13 @@ E
 
 additional procedures related to E
 
-    convert_the_x_coordinate_to_an_integer_mod_the_prime_group_size
-    convert_the_x962_encoded_public_key_octet_string_back_to_a_group_element
+    Procedure SignatureGeneration and SignatureVerification both need these:
+
+        get_the_x_coordinate_of_an_EC_point
+        convert_an_underlying_field_element_to_the_outer_prime_field
+
+    Procedure DecodeAPublicKeyFromAnOctetString needs these:
+
+        convert_an_octet_string_to_an_underlying_field_element
+        compute_the_y_coordinate_from_the_x_coordinate_and_a_parity_bit
 
