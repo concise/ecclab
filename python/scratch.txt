@@ -1,0 +1,30 @@
+        +--------------------------------------------------------------+
+        |                 ECDSA & Value Encoding/Decoding              |
+        +--------------------------------------------------------------+
+                          ^                        ^          ^
+                          |                        |          |
+        +---------------------------------------+  |  +----------------+
+        |    elliptic curve group operations    |  |  | hash algorithm |
+        +---------------------------------------+  |  +----------------+
+                    ^                       ^      |
+                    |                       |      |
+        +----------------------------+    +----------------------------+
+        |    modulo p arithmetics    |    |    modulo q arithmetics    |
+        +----------------------------+    +----------------------------+
+                    ^                                  ^
+                    |                                  |
+        +--------------------------------------------------------------+
+        |                   big integer arithmetics                    |
+        +--------------------------------------------------------------+
+
+        ASN.1 decoding
+        Public key decoding
+        X.509 certificate decoding
+        Finite field element decoding
+        Elliptic curve group element decoding
+
+        BitString -> BitString -> BitString -> UnsignedInteger -> GFq
+
+         Message       Digest      Trimmed
+                                    Digest
+
