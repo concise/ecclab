@@ -10,8 +10,8 @@ def try_secp256r1_ecdsa_verifier():
 
     try:
         sig_is_valid = secp256r1_ecdsa_verifier.verify(publickey=key,
-                                                       message=msg,
-                                                       signature=sig)
+                                                       signature=sig,
+                                                       message=msg)
     except secp256r1_ecdsa_verifier.SigVerifyInputError:
         print('ERROR: Some input value is in an incorrect format')
         return False
