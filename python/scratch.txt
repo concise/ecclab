@@ -28,3 +28,26 @@
          Message       Digest      Trimmed
                                     Digest
 
+y = bit_length_of_unsigned_integer(x)
+
+        PROCEDURE
+
+                IF x = 0 THEN
+                        y <- 0
+                ELSE
+                        y <- bit_length_of_natural_number(x)
+                ENDIF
+
+y = bit_length_of_natural_number(x)
+
+        COMMENT
+
+                y is the smallest natural number
+                such that 2^y is greater than x
+
+        PROCEDURE
+
+                y <- 1
+                WHILE 2^y <= x DO
+                        y <- y + 1
+                DONE
