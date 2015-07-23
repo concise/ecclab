@@ -51,3 +51,12 @@ y = bit_length_of_natural_number(x)
                 WHILE 2^y <= x DO
                         y <- y + 1
                 DONE
+
+
+How to parse an X.509 certificate?
+
+    https://en.wikipedia.org/wiki/X.509
+    https://tools.ietf.org/html/rfc5280
+    https://www.rfc-editor.org/errata_search.php?rfc=5280
+    https://tools.ietf.org/html/rfc6818
+
