@@ -195,3 +195,20 @@ A list of different representations of an octet string (a sequence of zero or mo
 
 Most significant word first when viewing a sequence of words as an unsigned integer
 
+
+
+
+
+dec     decimal         base-10 representation      each unit about 3.3 bits
+hex     hexadecimal     base-16 representation      each unit 4 bits
+uint8[]                 base-256                    each unit 8 bits
+uint16[]                base-65536                  each unit 16 bits
+uint32[]                base-4294967296             each unit 32 bits
+uint64[]                base-18446744073709551616   each unit 64 bits
+
+某程式語言 L 提供 uint8[] 原生資料型別與模 256 的運算：
+
+    零、255 個非零元素、加法、取負值、乘法、等號
+
+我們想要利用 uint8[] 來實現代數型別 T 的計算
+ 
