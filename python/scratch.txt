@@ -106,3 +106,91 @@ additional procedures related to E
         convert_an_octet_string_to_an_underlying_field_element
         compute_the_y_coordinate_from_the_x_coordinate_and_a_parity_bit
 
+
+--------------------------------------------------------------------------------
+
+pickle   | serialize   | marshal               | encode | flatten
+unpickle | deserialize | unmarshal | demarshal | decode
+
+To represent a public key (a point on the EC defined over GFp) as an octet string
+
+        1 octet  |  32 octets  |  32 octets
+         (0x04)     (x-coord)     (y-coord)
+                       GFp           GFp
+
+To represent a signature (two non-negative integers modulo q) as an octet string
+
+    METHOD 1: (8~72 octets) (r and s are ASN.1 SIGNED BIG INTEGERs using two's complement format)
+
+        1 octet  |  1 octet  |  1 octet  |  1 octet  |  M octets  |  1 octet  |  1 octet  |  N octets
+         (0x30)       (L)        (0x02)      (M)          (r)         (0x02)      (N)          (s)
+                 6<=L=M+n+4<=70            1<=M<=33     1<=r<=q-1               1<=N<=33     1<=s<=q-1
+
+    METHOD 2: (64 octets) (r and s are FIXED-WIDTH UNSIGNED BIG INTEGERs)
+
+        32 octets  |  32 octets
+           (r)           (s)
+         1<=r<=q-1     1<=s<=q-1
+
+To represent a signature base string
+
+    METHOD 1: (an octet string of any length)
+
+        the unmodified original message
+
+    METHOD 2: (a fixed-length octet string)
+
+        the hashed result of the original message
+
+
+https://datatracker.ietf.org/wg/jose/documents/
+Javascript Object Signing and Encryption (JOSE)
+JSON Web Key (JWK)
+JSON Web Signature (JWS)
+JSON Web Encryption (JWE)
+JSON Web Algorithms (JWA)
+
+
+
+https://tools.ietf.org/html/rfc4648
+
+base64 與 base64url 編碼原則
+
+        3 * (8-bit 字節) ===> 4 * (6-bit 字元)
+        2 * (8-bit 字節) ===> 3 * (6-bit 字元)  +  1 * (填充字元)
+        1 * (8-bit 字節) ===> 2 * (6-bit 字元)  +  2 * (填充字元)
+
+        假設編碼結果是 n 個字元，則 n 除以 4 必定餘二、餘三、餘零，不可能餘一。
+        假如發生餘二、餘三的情況，就應該要在最後補上兩個、一個填充字元。
+
+5.  Base 64 Encoding with URL and Filename Safe Alphabet
+
+        編碼結果一定可以被 ^[A-Za-z0-9-_]*$ 匹配
+
+        Table 2: The "URL and Filename safe" Base 64 Alphabet
+
+
+
+A list of different representations of an octet string (a sequence of zero or more bytes)
+
+    hexadecimal (base16)        aa94aca3e74a39bf6457fbc5c0261128
+    HEXADECIMAL (BASE16)        AA94ACA3E74A39BF6457FBC5C0261128
+    base64 encoded              qpSso+dKOb9kV/vFwCYRKA==
+    base64url encoded           qpSso-dKOb9kV_vFwCYRKA
+    base64urlwpadding encoded   qpSso-dKOb9kV_vFwCYRKA==
+
+    Number of bytes             16
+    Number of bits              128
+
+    C-style array initializer   {0xaa, 0x94, 0xac, 0xa3, 0xe7, 0x4a, 0x39, 0xbf, 0x64, 0x57, 0xfb, 0xc5, 0xc0, 0x26, 0x11, 0x28}
+    C-style ARRAY INITIALIZER   {0xAA, 0x94, 0xAC, 0xA3, 0xE7, 0x4A, 0x39, 0xBF, 0x64, 0x57, 0xFB, 0xC5, 0xC0, 0x26, 0x11, 0x28}
+    C-style string literal      "\xaa\x94\xac\xa3\xe7\x4a\x39\xbf\x64\x57\xfb\xc5\xc0\x26\x11\x28"
+    C-style STRING LITERAL      "\xAA\x94\xAC\xA3\xE7\x4A\x39\xBF\x64\x57\xFB\xC5\xC0\x26\x11\x28"
+    C-style hybrid string       "\xaa\x94\xac\xa3\xe7J9\xbfdW\xfb\xc5\xc0&\x11("
+
+    decimal integer (base10)    226740720778721941279900020015439941928
+    octal integer (base8)       2524512624371645071576621277674270011410450
+    binary integer (base2)      10101010100101001010110010100011111001110100101000111001101111110110010001010111111110111100010111000000001001100001000100101000
+
+Most significant character first when viewing a sequence of characters as an unsigned integer
+
