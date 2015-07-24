@@ -1,4 +1,5 @@
-__all__ = ['q', 'G', 'E_add', 'E_scalar_multiply', 'E_x_mod_q', 'E_from_bytes']
+__all__ = ['q', 'G', 'E_add', 'E_scalar_multiply',
+           'E_take_x_modulo_q', 'E_from_bytes']
 
 q = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
 
@@ -115,8 +116,12 @@ def E_scalar_multiply(P, k):
             T = E_add(T, P)
     return T
 
-def E_x_mod_q(P):
-    raise NotImplementedError
+def E_take_x_modulo_q(P):
+    assert _in_E(P)
+    assert not E_eq(P, Z)
+    _, _, XP, _ = P
+    _, GFp_value = XP
+    return GFp_value % q
 
 def E_from_bytes(stream):
     raise NotImplementedError
