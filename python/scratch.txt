@@ -175,12 +175,13 @@ A list of different representations of an octet string (a sequence of zero or mo
 
     hexadecimal (base16)        aa94aca3e74a39bf6457fbc5c0261128
     HEXADECIMAL (BASE16)        AA94ACA3E74A39BF6457FBC5C0261128
-    base64 encoded              qpSso+dKOb9kV/vFwCYRKA==
-    base64url encoded           qpSso-dKOb9kV_vFwCYRKA
-    base64urlwpadding encoded   qpSso-dKOb9kV_vFwCYRKA==
 
     Number of bytes             16
     Number of bits              128
+
+    base64 encoded              qpSso+dKOb9kV/vFwCYRKA==
+    base64url encoded           qpSso-dKOb9kV_vFwCYRKA
+    base64urlwpadding encoded   qpSso-dKOb9kV_vFwCYRKA==
 
     C-style array initializer   {0xaa, 0x94, 0xac, 0xa3, 0xe7, 0x4a, 0x39, 0xbf, 0x64, 0x57, 0xfb, 0xc5, 0xc0, 0x26, 0x11, 0x28}
     C-style ARRAY INITIALIZER   {0xAA, 0x94, 0xAC, 0xA3, 0xE7, 0x4A, 0x39, 0xBF, 0x64, 0x57, 0xFB, 0xC5, 0xC0, 0x26, 0x11, 0x28}
