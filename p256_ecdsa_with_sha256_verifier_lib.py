@@ -17,7 +17,45 @@ def verify(publickey, signature, message):
     return _is_valid_Q_h_r_s_ecdsa_quadruple(Q, h, r, s)
 
 def extract_an_ecdsa_public_key_octets_from_an_x509_certificate(stream):
-    raise NotImplementedError # TODO
+    if type(stream) is not bytes:
+        raise SignatureVerifierError('bad input')
+    seqbody, tail = _parse_an_asn1_sequence(stream)
+    if len(tail) != 0:
+        raise SignatureVerifierError('bad input')
+    #
+    # TODO: Need improvement later
+    #
+    # Because I'm too lazy to actually parse the whole X.509 certificate
+    # structure, for now I am going to make a shortcut here...
+    #
+    splitted = seqbody.split(bytes.fromhex(
+            '301306072a8648ce3d020106082a8648ce3d030107034200'))
+    if len(splitted) == 1:
+        raise SignatureVerifierError('bad input')
+    elif len(splitted) >= 3:
+        raise SignatureVerifierError('case not implemented yet')
+    else:
+        stream2 = splitted[1]
+        if len(stream2) < 1:
+            raise SignatureVerifierError('bad input')
+        elif stream2[0] in {0x02, 0x03} and len(stream2) >= 33:
+            octets = stream2[1:33]
+            try:
+                Q = E_from_bytes(octets)
+            except E_InputError:
+                raise SignatureVerifierError('bad input')
+            else:
+                return octets
+        elif stream2[0] in {0x04, 0x06, 0x07} and len(stream2) >= 65:
+            octets = stream2[1:65]
+            try:
+                Q = E_from_bytes(octets)
+            except E_InputError:
+                raise SignatureVerifierError('bad input')
+            else:
+                return octets
+        else:
+            raise SignatureVerifierError('bad input')
 
 class SignatureVerifierError(Exception):
     pass
@@ -49,43 +87,43 @@ def _decode_a_public_key_point_from_an_octet_string(pk):
 def _decode_a_signature_from_an_octet_string(sig):
     seqbody, tail = _parse_an_asn1_sequence(sig)
     if len(tail) != 0:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
     r, tail = parse_asn1_integer(sequence_body)
     s, tail = parse_asn1_integer(tail)
     if len(tail) != 0:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
     if 0 < r and r < q and 0 < s and s < q:
         return r, s
     else:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
 
 def _hash_encode_an_octet_string_into_an_integer_modulo_q(msg):
     return _rfc6979_bits2int(_sha256(msg)) % q
 
 def _parse_an_asn1_sequence(stream):
     if len(stream) < 2:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
     T, L = stream[0], stream[1]
     if T != 0x30:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
     if L > 127:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('case not implemented yet')
     if L > len(stream)-2:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
     V = stream[2:2+L]
     trailing_octets = stream[2+L:]
     return V, trailing_octets
 
 def _parse_an_asn1_signed_integer(stream):
     if len(stream) < 3:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
     T, L = stream[0], stream[1]
     if T != 0x02:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
     if L > 127:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('case not implemented yet')
     if L == 0 or L > len(stream)-2:
-        raise SignatureVerifierError('bad signature input')
+        raise SignatureVerifierError('bad input')
     V = int.from_bytes(stream[2:2+L], byteorder='big', signed=True)
     trailing_octets = stream[2+L:]
     return V, trailing_octets
