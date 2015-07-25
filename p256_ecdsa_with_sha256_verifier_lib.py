@@ -1,6 +1,24 @@
-# verify
-# extract_an_ecdsa_public_key_octets_from_an_x509_certificate
-# SignatureVerifierError
+# TODO
+#
+#   Define an interface I am going to implement with this Python module
+#
+# EcdsaError ::: LanguagePrimitive
+# Boolean ::: LanguagePrimitive
+# OctetString ::: LanguagePrimitive
+# X509Cert ::: OctetString
+# PublicKey ::: OctetString
+# Signature ::: OctetString
+# Message ::: OctetString
+#
+# extract_publickey_from_certificate
+#       :: (X509Cert -> PublicKey) except EcdsaError
+#
+# compress_publickey
+#       :: (PublicKey -> PublicKey) except EcdsaError
+#
+# verify_signature
+#       :: ((PublicKey, Signature, Message) -> Boolean) except EcdsaError
+#
 
 from P256 import q
 from P256ECC import (
