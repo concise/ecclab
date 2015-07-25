@@ -1,4 +1,4 @@
-# GFp(i)                construct an element in GFp from an integer i
+# GFp(i)                construct an element in GFp
 # GFp_contains(e)       check if a Python object e is a valid element in GFp
 # GFp_from_bytes(strm)  fixed-length-unsigned-MSB-first-decode the octets strm
 # GFp_to_bytes(m)       fixed-length-unsigned-MSB-first-encode the integer m
@@ -8,7 +8,8 @@
 # GFp_inv(m)            m**(-1)
 # GFp_mul(m, n)         m * n
 # GFp_sqrt(m, parity)   m**(1/2)
-# GFpError              exception raised by GFp_inv(m) and GFp_sqrt(m, parity)
+# GFp_parity_of(m)      m & 1
+# GFp_Error             can be thrown by GFp_from_bytes, GFp_inv, GFp_sqrt
 
 from P256 import p
 
@@ -26,10 +27,19 @@ def GFp_contains(e):
         return False
 
 def GFp_from_bytes(strm):
-    raise NotImplementedError # TODO
+    assert type(strm) is bytes
+    if len(strm) != 32:
+        raise GFp_Error('GFp element must be encoded as 32 octets exactly')
+    mval = int.from_bytes(strm, byteorder='big', signed=False)
+    if mval >= p:
+        raise GFp_Error('GFp element must be an unsigned integer < p')
+    return _TAG_, mval
 
 def GFp_to_bytes(m):
-    raise NotImplementedError # TODO
+    assert GFp_contains(m)
+    _, mval = m
+    mval = mval % p
+    return mval.to_bytes(length=32, byteorder='big', signed=False)
 
 def GFp_eq(m, n):
     assert GFp_contains(m)
@@ -54,7 +64,7 @@ def GFp_inv(m):
     assert GFp_contains(m)
     _, mval = m
     if (mval % p) == 0:
-        raise GFpError('division by zero')
+        raise GFp_Error('division by zero')
     return _TAG_, pow(mval, p - 2, p)
 
 def GFp_mul(m, n):
@@ -69,22 +79,29 @@ def GFp_sqrt(m, parity):
     assert type(parity) is int
     _, mval = m
     try:
-        rval = _sqrt_modulo_q_(mval)
+        rval = _GFp_sqrt_modulo_p_(mval)
     except ArithmeticError:
-        raise GFpError('no square root of the element exists')
-    if rval & 1 != parity & 1:
-        rval = (-rval) % p
-    return _TAG_, rval
+        raise GFp_Error('no square root of the element exists')
+    r = _TAG_, rval
+    if GFp_parity_of(r) == parity & 1:
+        return r
+    else:
+        return GFp_neg(r)
 
-class GFpError(Exception):
+def GFp_parity_of(m):
+    assert GFp_contains(m)
+    _, mval = m
+    return mval & 1
+
+class GFp_Error(Exception):
     pass
 
-def _sqrt_modulo_q_(n):
-    # n^2 === n^( (p - 1) + 2 )     (mod p)
-    # n^2 === n^(  p + 1      )     (mod p)
-    # n   === n^( (p + 1) / 2 )     (mod p)
-    # m^2 === n^( (p + 1) / 2 )     (mod p)
-    # m   === n^( (p + 1) / 4 )     (mod p)
+def _GFp_sqrt_modulo_p_(n):
+    # n^2 === n^( (p - 1) + 2 ) (mod p)
+    # n^2 === n^(  p + 1      ) (mod p)
+    # n   === n^( (p + 1) / 2 ) (mod p)
+    # m^2 === n^( (p + 1) / 2 ) (mod p)
+    # m   === n^( (p + 1) / 4 ) (mod p)
     assert type(n) is int
     assert type(p) is int
     assert p % 4 == 3
