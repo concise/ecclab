@@ -25,9 +25,10 @@
 #   PublicKey :: OctetString  (X9.62 prime256v1 public keys)
 #
 #       A well-formed value of type PublicKey can be converted into an element
-#       of the elliptic curve group prime256v1, which MUST NOT be the point at
-#       infinity.  The value is in either the uncompressed form, the
-#       compressed form, or the hybrid form.
+#       of the elliptic curve group prime256v1 using the rules defined in
+#       X9.62, and the result MUST NOT be the point at infinity.  The
+#       OctetString value is in the "uncompressed", "compressed", or "hybrid"
+#       form, and its length should be 33 == (1 + 32) or 65 == (1 + 32 + 32).
 #
 #   Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
 #
