@@ -9,14 +9,14 @@
 
 _TAG_ = 'GFp'
 
-_PRIME_ = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
+p = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 
 def _is_a_two_tuple(obj):
     return type(obj) is tuple and len(obj) == 2
 
 def GFp(some_integer):
     assert type(some_integer) is int
-    return _TAG_, (some_integer) % _PRIME_
+    return _TAG_, (some_integer) % p
 
 def GFp_contains(m):
     if _is_a_two_tuple(m):
@@ -30,38 +30,38 @@ def GFp_eq(m, n):
     assert GFp_contains(n)
     _, mval = m
     _, nval = n
-    return (mval - nval) % _PRIME_ == 0
+    return (mval - nval) % p == 0
 
 def GFp_neg(m):
     assert GFp_contains(m)
     _, mval = m
-    return _TAG_, (-mval) % _PRIME_
+    return _TAG_, (-mval) % p
 
 def GFp_add(m, n):
     assert GFp_contains(m)
     assert GFp_contains(n)
     _, mval = m
     _, nval = n
-    return _TAG_, (mval + nval) % _PRIME_
+    return _TAG_, (mval + nval) % p
 
 def GFp_inv(m):
     assert GFp_contains(m)
     _, mval = m
-    if (mval % _PRIME_) == 0:
+    if (mval % p) == 0:
         raise ZeroDivisionError
-    return _TAG_, pow(mval, _PRIME_ - 2, _PRIME_)
+    return _TAG_, pow(mval, p - 2, p)
 
 def GFp_mul(m, n):
     assert GFp_contains(m)
     assert GFp_contains(n)
     _, mval = m
     _, nval = n
-    return _TAG_, (mval * nval) % _PRIME_
+    return _TAG_, (mval * nval) % p
 
 def GFp_sqrt_if_exists(m, parity):
     assert GFp_contains(m)
     _, mval = m
-    rval = pow(mval, (_PRIME_+1)//4, _PRIME_)
+    rval = pow(mval, (p+1)//4, p)
     if rval & 1 != parity:
-        rval = (-rval) % _PRIME_
+        rval = (-rval) % p
     return _TAG_, rval

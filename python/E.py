@@ -12,8 +12,7 @@
 # E_mul(M, k)           returns the value [k]M
 # E_InputError          the Exception that can be thrown by these E functions
 
-from GFp import (GFp, GFp_contains, GFp_eq,
-                 GFp_neg, GFp_add,
+from GFp import (p, GFp, GFp_contains, GFp_eq, GFp_neg, GFp_add,
                  GFp_inv, GFp_mul, GFp_sqrt_if_exists)
 
 q  = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
@@ -165,7 +164,6 @@ class E_InputError(Exception):
     pass
 
 def _octet_string_to_unsigned_integer_less_than_p_(octetstr):
-    from GFp import _PRIME_ as p
     intval = int.from_bytes(octetstr, byteorder='big', signed=False)
     if 0 <= intval and intval <= p-1:
         return intval
