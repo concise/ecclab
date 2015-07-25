@@ -1,16 +1,16 @@
-# An interface I am going to implement
+# Public-Key Cryptography Utilities
 #
-# Boolean        ::: Primitive  TRUE and FALSE
-# OctetString    ::: Primitive  arbitrary octet strings
-# X509CertError  ::: Primitive  "the provided OctetString is not an X509Cert"
-# PublicKeyError ::: Primitive  "the provided OctetString is not a PublicKey"
-# X509Cert  ::: OctetString     X.509 v3 certificates
-# PublicKey ::: OctetString     X9.62 prime256v1 public keys
-# Signature ::: OctetString     X9.62 prime256v1 ecdsa-with-SHA256 signatures
-# Message   ::: OctetString     arbitrary octet strings
+# Boolean        :: Primitive    TRUE and FALSE
+# OctetString    :: Primitive    arbitrary octet strings
+# X509CertError  :: Primitive    "the provided OctetString is not an X509Cert"
+# PublicKeyError :: Primitive    "the provided OctetString is not a PublicKey"
+# X509Cert       :: OctetString  X.509 v3 certificates
+# PublicKey      :: OctetString  X9.62 prime256v1 public keys
+# Signature      :: OctetString  X9.62 prime256v1 ecdsa-with-SHA256 signatures
+# Message        :: OctetString  arbitrary octet strings
 #
-# extract_publickey_from_certificate :: (X509Cert -> PublicKey)
-#                                       except X509CertError
+# extract_publickey_from_certificate : X509Cert -> PublicKey
+#                                      except X509CertError
 #
 #       Return the "BIT STRING" value (the length of which shall be a multiple
 #       of eight, so it is actually an octet string) from the nested field
@@ -19,8 +19,8 @@
 #       X.509 certificate input is not well-formed, the X509CertError
 #       exception will be raised.
 #
-# compress_publickey :: (PublicKey -> PublicKey)
-#                       except PublicKeyError
+# compress_publickey : PublicKey -> PublicKey
+#                      except PublicKeyError
 #
 #       If the provided PublicKey is already in the compressed form, return it
 #       without any modification.  If the provided is in the uncompressed form
@@ -28,8 +28,8 @@
 #       returned.  If the provided PublicKey is not in a correct format, the
 #       PublicKeyError exception will be raised.
 #
-# verify_signature :: ((PublicKey, Signature, Message) -> Boolean)
-#                     except PublicKeyError
+# verify_signature : (PublicKey, Signature, Message) -> Boolean
+#                    except PublicKeyError
 #
 #       Check if the provided Signature is valid for the Message under the
 #       PublicKey.  The PublicKeyError exception is raised if and only if the
