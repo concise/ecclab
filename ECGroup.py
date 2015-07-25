@@ -14,7 +14,7 @@
 # E_InputError          the Exception that can be thrown by these E functions
 
 from GFp import (p, GFp, GFp_contains, GFp_eq, GFp_neg, GFp_add,
-                 GFp_inv, GFp_mul, GFp_sqrt_if_exists)
+                 GFp_inv, GFp_mul, GFp_sqrt)
 
 q  = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
 a  = GFp(0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc)
@@ -24,11 +24,9 @@ Gy = GFp(0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5)
 G  = Gx, Gy
 Z  = GFp(0), GFp(0)
 
-def _is_a_two_tuple(obj):
-    return type(obj) is tuple and len(obj) == 2
-
 def _is_point_at_infinity(M):
-    if _is_a_two_tuple(M) and GFp_contains(M[0]) and GFp_contains(M[1]):
+    if (type(M) is tuple and len(M) == 2 and GFp_contains(M[0]) and
+                                             GFp_contains(M[1])):
         Mx, My = M
         Zx, Zy = Z
         return GFp_eq(Mx, Zx) and GFp_eq(My, Zy)
@@ -36,7 +34,8 @@ def _is_point_at_infinity(M):
         return False
 
 def _is_on_curve(M):
-    if _is_a_two_tuple(M) and GFp_contains(M[0]) and GFp_contains(M[1]):
+    if (type(M) is tuple and len(M) == 2 and GFp_contains(M[0]) and
+                                             GFp_contains(M[1])):
         x, y = M
         lhs = GFp_mul(y, y)
         rhs = GFp_add(GFp_add(GFp_mul(GFp_mul(x, x), x), GFp_mul(a, x)), b)
@@ -215,7 +214,7 @@ def _import_compressed_elm_with_y_parity(s, y_parity):
     x_int = _octet_string_to_unsigned_integer_less_than_p_(s)
     x = GFp(x_int)
     w = GFp_add(GFp_add(GFp_mul(GFp_mul(x, x), x), GFp_mul(a, x)), b)
-    y = GFp_sqrt_if_exists(w, y_parity)
+    y = GFp_sqrt(w, y_parity)
     R = x, y
     if _is_on_curve(R):
         return x, y
