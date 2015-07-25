@@ -1,21 +1,39 @@
-# TODO: Define an interface I am going to implement with this Python module
+# An interface I am going to implement
 #
-# EcdsaError ::: LanguagePrimitive
-# Boolean ::: LanguagePrimitive
-# OctetString ::: LanguagePrimitive
-# X509Cert ::: OctetString
-# PublicKey ::: OctetString
-# Signature ::: OctetString
-# Message ::: OctetString
+# X509CertError     ::: LanguagePrimitive
+# PublicKeyError    ::: LanguagePrimitive
+# Boolean           ::: LanguagePrimitive
+# OctetString       ::: LanguagePrimitive
+# X509Cert          ::: OctetString
+# PublicKey         ::: OctetString
+# Signature         ::: OctetString
+# Message           ::: OctetString
 #
-# extract_publickey_from_certificate
-#       :: (X509Cert -> PublicKey) except EcdsaError
+# extract_publickey_from_certificate :: (X509Cert -> PublicKey)
+#                                       except X509CertError
 #
-# compress_publickey
-#       :: (PublicKey -> PublicKey) except EcdsaError
+#       Return the "BIT STRING" value (the length of which shall be a multiple
+#       of eight, so it is actually an octet string) from the nested field
+#       tbsCertificate -> subjectPublicKeyInfo -> subjectPublicKey if such
+#       field exists and the value is a valid PublicKey.  If the provided
+#       X.509 certificate input is not well-formed, the X509CertError
+#       exception will be raised.
 #
-# verify_signature
-#       :: ((PublicKey, Signature, Message) -> Boolean) except EcdsaError
+# compress_publickey :: (PublicKey -> PublicKey)
+#                       except PublicKeyError
+#
+#       If the provided PublicKey is already in the compressed form, return it
+#       without any modification.  If the provided is in the uncompressed form
+#       or the hybrid form as specified in X9.62, the compressed equivalent is
+#       returned.  If the provided PublicKey is not in a correct format, the
+#       PublicKeyError exception will be raised.
+#
+# verify_signature :: ((PublicKey, Signature, Message) -> Boolean)
+#                     except PublicKeyError
+#
+#       Check if the provided Signature is valid for the Message under the
+#       PublicKey.  The PublicKeyError exception is raised if and only if the
+#       provided PublicKey is not in a correct format.
 #
 
 from P256 import q
