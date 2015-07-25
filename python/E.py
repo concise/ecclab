@@ -17,10 +17,8 @@ from GFp import (GFp, GFp_contains, GFp_eq,
                  GFp_inv, GFp_mul, GFp_sqrt_if_exists)
 
 q = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
-
 a = GFp(-3)
 b = GFp(0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b)
-
 Z = GFp(0), GFp(0)
 G = (GFp(0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296),
      GFp(0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5))
@@ -63,8 +61,35 @@ def E(*args):
         raise E_InputError('E() can only accept either a `bytes` object, '
                            'an `int` object, or two `int` objects')
 
+def E_from_bytes(stream):
+    if type(stream) is not bytes:
+        raise E_InputError('the provided input is not a `bytes` object')
+    elif len(stream) == 1 and stream[0] == 0x00:
+        return Z
+    elif len(stream) == 1+32 and stream[0] == 0x02:
+        return _import_compressed_elm_with_y_parity(stream[1:], y_parity=0)
+    elif len(stream) == 1+32 and stream[0] == 0x03:
+        return _import_compressed_elm_with_y_parity(stream[1:], y_parity=1)
+    elif len(stream) == 1+32*2 and stream[0] == 0x04:
+        return _import_uncompressed_elm(stream[1:])
+    elif len(stream) == 1+32*2 and stream[0] == 0x06:
+        return _import_uncompressed_elm_with_y_parity(stream[1:], y_parity=0)
+    elif len(stream) == 1+32*2 and stream[0] == 0x07:
+        return _import_uncompressed_elm_with_y_parity(stream[1:], y_parity=1)
+    else:
+        raise E_InputError('the provided input is in an invalid format')
+
 def E_contains(M):
     return _is_point_at_infinity(M) or _is_on_curve(M)
+
+def E_take_x_mod_q(M):
+    assert E_contains(M)
+    if E_eq(M, Z):
+        raise E_InputError('operand cannot be the point at infinity')
+    else:
+        x, y = M
+        _, xval = x
+        return xval % q
 
 def E_eq(M, N):
     assert E_contains(M)
@@ -133,15 +158,6 @@ def E_mul(M, k):
                 R = E_add(R, M)
         return R
 
-def E_take_x_mod_q(M):
-    assert E_contains(M)
-    if E_eq(M, Z):
-        raise E_InputError('operand cannot be the point at infinity')
-    else:
-        x, y = M
-        _, xval = x
-        return xval % q
-
 def _octet_string_to_unsigned_integer_less_than_p_(octetstr):
     from GFp import _PRIME_ as p
     intval = int.from_bytes(octetstr, byteorder='big', signed=False)
@@ -177,21 +193,3 @@ def _import_compressed_elm_with_y_parity(s, y_parity):
         return x, y
     else:
         raise E_InputError('bad input octet string')
-
-def E_from_bytes(stream):
-    if type(stream) is not bytes:
-        raise E_InputError('the provided input is not a `bytes` object')
-    elif len(stream) == 1 and stream[0] == 0x00:
-        return Z
-    elif len(stream) == 1+32 and stream[0] == 0x02:
-        return _import_compressed_elm_with_y_parity(stream[1:], y_parity=0)
-    elif len(stream) == 1+32 and stream[0] == 0x03:
-        return _import_compressed_elm_with_y_parity(stream[1:], y_parity=1)
-    elif len(stream) == 1+32*2 and stream[0] == 0x04:
-        return _import_uncompressed_elm(stream[1:])
-    elif len(stream) == 1+32*2 and stream[0] == 0x06:
-        return _import_uncompressed_elm_with_y_parity(stream[1:], y_parity=0)
-    elif len(stream) == 1+32*2 and stream[0] == 0x07:
-        return _import_uncompressed_elm_with_y_parity(stream[1:], y_parity=1)
-    else:
-        raise E_InputError('the provided input is in an invalid format')
