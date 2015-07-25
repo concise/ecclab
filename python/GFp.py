@@ -1,14 +1,11 @@
-#
-# GFp(i)            construct an element in GFp from the integer i
-#
-# GFp_contains(X)   check if X is a valid presentation of an element in GFp
-#
-# GFp_eq(m, n)      returns whether or not m is equal to n
-# GFp_neg(m)        returns the value n such that (m + n) == GFp(0)
-# GFp_add(m, n)     returns the value (m + n)
-# GFp_inv(m)        returns the value n such that (m * n) == GFp(1)
-# GFp_mul(m, n)     returns the value (m * n)
-#
+# GFp(i)                construct an element in GFp from the integer i
+# GFp_contains(X)       check if a Python object X is a valid element in GFp
+# GFp_eq(m, n)          returns whether or not m is equal to n
+# GFp_neg(m)            returns the value n such that (m + n) == GFp(0)
+# GFp_add(m, n)         returns the value (m + n)
+# GFp_inv(m)            returns the value n such that (m * n) == GFp(1)
+# GFp_mul(m, n)         returns the value (m * n)
+# GFp_sqrt_if_exists(m) returns the value n such that (n * n) == m
 
 _TAG_ = 'GFp'
 
@@ -60,3 +57,11 @@ def GFp_mul(m, n):
     _, mval = m
     _, nval = n
     return _TAG_, (mval * nval) % _PRIME_
+
+def GFp_sqrt_if_exists(m, parity):
+    assert GFp_contains(m)
+    _, mval = m
+    rval = pow(mval, (_PRIME_+1)//4, _PRIME_)
+    if rval & 1 != parity:
+        rval = (-rval) % _PRIME_
+    return _TAG_, rval
