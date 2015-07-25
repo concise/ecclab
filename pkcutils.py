@@ -1,13 +1,13 @@
 # An interface I am going to implement
 #
-# X509CertError     ::: LanguagePrimitive
-# PublicKeyError    ::: LanguagePrimitive
-# Boolean           ::: LanguagePrimitive
-# OctetString       ::: LanguagePrimitive
-# X509Cert          ::: OctetString
-# PublicKey         ::: OctetString
-# Signature         ::: OctetString
-# Message           ::: OctetString
+# Boolean        ::: Primitive  TRUE and FALSE
+# OctetString    ::: Primitive  arbitrary octet strings
+# X509CertError  ::: Primitive  "the provided OctetString is not an X509Cert"
+# PublicKeyError ::: Primitive  "the provided OctetString is not a PublicKey"
+# X509Cert  ::: OctetString     X.509 v3 certificates
+# PublicKey ::: OctetString     X9.62 prime256v1 public keys
+# Signature ::: OctetString     X9.62 prime256v1 ecdsa-with-SHA256 signatures
+# Message   ::: OctetString     arbitrary octet strings
 #
 # extract_publickey_from_certificate :: (X509Cert -> PublicKey)
 #                                       except X509CertError
