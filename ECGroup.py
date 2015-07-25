@@ -82,14 +82,26 @@ def E_from_bytes(stream):
     else:
         raise E_InputError('the provided input is in an invalid format')
 
+#
+# TODO:
+#
+# Need to refactor GFp and ECGroup modules.
+# Here we should not rely on the data structure of the object `M`.
+#
 def E_to_bytes(M, compressed=False):
     assert E_contains(M)
     if E_eq(M, Z):
         return b'\x00'
     elif compressed is True:
-        raise NotImplementedError # TODO return a bytes object of length 33
+        (_, xval), (_, yval) = M
+        XX = xval.to_bytes(length=32, byteorder='big')
+        parity = yval & 1
+        return bytes([0x02 ^ parity]) + XX
     elif compressed is False:
-        raise NotImplementedError # TODO return a bytes object of length 65
+        (_, xval), (_, yval) = M
+        XX = xval.to_bytes(length=32, byteorder='big')
+        YY = yval.to_bytes(length=32, byteorder='big')
+        return b'\x04' + XX + YY
     else:
         raise E_InputError('argument "compressed" must be True or False')
 
