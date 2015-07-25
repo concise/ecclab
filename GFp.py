@@ -71,7 +71,7 @@ def GFp_sqrt(m, parity):
     try:
         rval = _sqrt_modulo_q_(mval)
     except ArithmeticError:
-        raise GFpError('No square root of the element exists')
+        raise GFpError('no square root of the element exists')
     if rval & 1 != parity & 1:
         rval = (-rval) % p
     return _TAG_, rval
@@ -80,21 +80,11 @@ class GFpError(Exception):
     pass
 
 def _sqrt_modulo_q_(n):
-    #
-    # Given n an integer and p a prime number that is congruent to 3 modulo 4,
-    # find an integer m such that
-    #
-    #       m * m == n  (mod p)
-    #
-    # If there exists no such an m value, raise an ArithmeticError exception.
-    # We are going to compute the value of m using the following simple trick:
-    #
-    #       n**2 == n**(2 + (p - 1))    (mod p)
-    #       n**2 == n**(p + 1)          (mod p)
-    #       n    == n**((p + 1) // 2)   (mod p)
-    #       m**2 == n**((p + 1) // 2)   (mod p)
-    #       m    == n**((p + 1) // 4)   (mod p)
-    #
+    # n^2 === n^( (p - 1) + 2 )     (mod p)
+    # n^2 === n^(  p + 1      )     (mod p)
+    # n   === n^( (p + 1) / 2 )     (mod p)
+    # m^2 === n^( (p + 1) / 2 )     (mod p)
+    # m   === n^( (p + 1) / 4 )     (mod p)
     assert type(n) is int
     assert type(p) is int
     assert p % 4 == 3
@@ -102,4 +92,4 @@ def _sqrt_modulo_q_(n):
     if (m * m - n) % p == 0:
         return m
     else:
-        raise ArithmeticError('0x%x is not a square modulo 0x%x' % (n, p))
+        raise ArithmeticError('n=%d is not a square modulo p=%d' % (n, p))
