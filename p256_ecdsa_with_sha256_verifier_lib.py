@@ -39,7 +39,7 @@ def extract_an_ecdsa_public_key_octets_from_an_x509_certificate(stream):
         if len(stream2) < 1:
             raise SignatureVerifierError('bad input')
         elif stream2[0] in {0x02, 0x03} and len(stream2) >= 33:
-            octets = stream2[1:33]
+            octets = stream2[:33]
             try:
                 Q = E_from_bytes(octets)
             except E_InputError:
@@ -47,13 +47,12 @@ def extract_an_ecdsa_public_key_octets_from_an_x509_certificate(stream):
             else:
                 return octets
         elif stream2[0] in {0x04, 0x06, 0x07} and len(stream2) >= 65:
-            octets = stream2[1:65]
+            octets = stream2[:65]
             try:
                 Q = E_from_bytes(octets)
             except E_InputError:
                 raise SignatureVerifierError('bad input')
-            else:
-                return octets
+            return octets
         else:
             raise SignatureVerifierError('bad input')
 
@@ -107,12 +106,24 @@ def _parse_an_asn1_sequence(stream):
     if T != 0x30:
         raise SignatureVerifierError('bad input')
     if L > 127:
-        raise SignatureVerifierError('case not implemented yet')
-    if L > len(stream)-2:
-        raise SignatureVerifierError('bad input')
-    V = stream[2:2+L]
-    trailing_octets = stream[2+L:]
-    return V, trailing_octets
+        if L == 128:
+            raise SignatureVerifierError('bad input')
+        length_of_the_L_field = L - 128
+        if len(stream) < 1 + 1 + length_of_the_L_field:
+            raise SignatureVerifierError('bad input')
+        octets_L_field = stream[2:2+length_of_the_L_field]
+        L = int.from_bytes(octets_L_field, byteorder='big', signed=False)
+        if len(stream) < 1 + 1 + length_of_the_L_field + L:
+            raise SignatureVerifierError('bad input')
+        V = stream[1+1+length_of_the_L_field:1+1+length_of_the_L_field+L]
+        trailing_octets = stream[1+1+length_of_the_L_field+L:]
+        return V, trailing_octets
+    else:
+        if L > len(stream)-2:
+            raise SignatureVerifierError('bad input')
+        V = stream[2:2+L]
+        trailing_octets = stream[2+L:]
+        return V, trailing_octets
 
 def _parse_an_asn1_signed_integer(stream):
     if len(stream) < 3:
