@@ -14,16 +14,16 @@
 
 import P256
 
-from GFp import (GFp, GFp_contains, GFp_from_bytes, GFp_to_bytes, GFp_eq,
-                 GFp_neg, GFp_add, GFp_inv, GFp_mul, GFp_sqrt, GFp_parity_of,
-                 GFp_Error)
+from P256GFp import (
+        GFp, GFp_contains, GFp_from_bytes, GFp_to_bytes, GFp_eq, GFp_neg,
+        GFp_add, GFp_inv, GFp_mul, GFp_sqrt, GFp_parity_of, GFp_Error)
 
-p  = P256.p
-q  = P256.q
-a  = GFp(P256.a)
-b  = GFp(P256.b)
-G  = GFp(P256.Gx), GFp(P256.Gy)
-Z  = GFp(0), GFp(0)
+p = P256.p
+q = P256.q
+a = GFp(P256.a)
+b = GFp(P256.b)
+G = GFp(P256.Gx), GFp(P256.Gy)
+Z = GFp(0), GFp(0)
 
 def _E_is_point_at_infinity(M):
     if not (type(M) is tuple and len(M) == 2):
