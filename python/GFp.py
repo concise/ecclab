@@ -1,10 +1,14 @@
+#
 # GFp(i)            construct an element in GFp from the integer i
+#
 # GFp_contains(X)   check if X is a valid presentation of an element in GFp
+#
 # GFp_eq(m, n)      returns whether or not m is equal to n
-# GFp_neg(m)        returns the value n such that (m + n == 0)
+# GFp_neg(m)        returns the value n such that (m + n) == GFp(0)
 # GFp_add(m, n)     returns the value (m + n)
-# GFp_inv(m)        returns the value n such that (m * n == 1)
+# GFp_inv(m)        returns the value n such that (m * n) == GFp(1)
 # GFp_mul(m, n)     returns the value (m * n)
+#
 
 _TAG_ = 'GFp'
 
