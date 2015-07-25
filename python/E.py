@@ -148,5 +148,30 @@ def E_take_x_mod_q(M):
         _, xval = x
         return xval % q
 
-def E_from_bytes():
+def _import_uncompressed_elm(stream):
     raise NotImplementedError
+
+def _import_uncompressed_elm_with_y_parity(stream, y_parity):
+    raise NotImplementedError
+
+def _import_compressed_elm_with_y_parity(stream, y_parity):
+    raise NotImplementedError
+
+def E_from_bytes(stream):
+    pLEN = 32
+    if type(stream) is not bytes:
+        raise E_InputError('the provided input is not a `bytes` object')
+    elif len(stream) == 1 and stream[0] == 0x00:
+        return Z
+    elif len(stream) == 1+pLEN and stream[0] == 0x02:
+        return _import_compressed_elm_with_y_parity(stream, y_parity=0)
+    elif len(stream) == 1+pLEN and stream[0] == 0x03:
+        return _import_compressed_elm_with_y_parity(stream, y_parity=1)
+    elif len(stream) == 1+pLEN*2 and stream[0] == 0x04:
+        return _import_uncompressed_elm(stream)
+    elif len(stream) == 1+pLEN*2 and stream[0] == 0x06:
+        return _import_uncompressed_elm_with_y_parity(stream, y_parity=0)
+    elif len(stream) == 1+pLEN*2 and stream[0] == 0x07:
+        return _import_uncompressed_elm_with_y_parity(stream, y_parity=1)
+    else:
+        raise E_InputError('the provided input is in an invalid format')
