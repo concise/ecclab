@@ -27,13 +27,12 @@ def _is_valid_Q_h_r_s_ecdsa_quadruple(Q, h, r, s):
     assert 0 <= h and h <= q-1
     assert 1 <= r and r <= q-1
     assert 1 <= s and s <= q-1
-    r2 = E_take_x_mod_q(E_add(E_mul(G, (h * _modq_inv(s))),
-                              E_mul(Q, (r * _modq_inv(s)))
-                              ))
+    r2 = E_take_x_mod_q(E_add(E_mul(G, _div_(h, s)),
+                              E_mul(Q, _div_(r, s))))
     return (r - r2) % q == 0
 
-def _modq_inv(s):
-    return pow(s, q - 2, q)
+def _div_(a, b):
+    return (a * pow(b, q - 2, q)) % q
 
 def _decode_a_public_key_point_from_an_octet_string(pk):
     if type(pk) is not bytes:
