@@ -170,8 +170,7 @@ def _import_compressed_elm_with_y_parity(s, y_parity):
     assert len(s) == 32
     x_int = _octet_string_to_unsigned_integer_less_than_p_(s)
     x = GFp(x_int)
-    w = GFp_add(GFp_add(GFp_mul(GFp_mul(x, x), x),
-                        GFp_mul(a, GFp_mul(x, x))), b)
+    w = GFp_add(GFp_add(GFp_mul(GFp_mul(x, x), x), GFp_mul(a, x)), b)
     y = GFp_sqrt_if_exists(w, y_parity)
     R = x, y
     if _is_on_curve(R):
