@@ -1,6 +1,4 @@
-# TODO
-#
-#   Define an interface I am going to implement with this Python module
+# TODO: Define an interface I am going to implement with this Python module
 #
 # EcdsaError ::: LanguagePrimitive
 # Boolean ::: LanguagePrimitive
