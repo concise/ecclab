@@ -1,13 +1,50 @@
-# Public-Key Cryptography Utilities
 #
-# Boolean        :: Primitive    TRUE and FALSE
-# OctetString    :: Primitive    arbitrary octet strings
-# X509CertError  :: Primitive    "the provided OctetString is not an X509Cert"
-# PublicKeyError :: Primitive    "the provided OctetString is not a PublicKey"
-# X509Cert       :: OctetString  X.509 v3 certificates
-# PublicKey      :: OctetString  X9.62 prime256v1 public keys
-# Signature      :: OctetString  X9.62 prime256v1 ecdsa-with-SHA256 signatures
-# Message        :: OctetString  arbitrary octet strings
+#                       Public-Key Cryptography Utilities
+#                       ---------------------------------
+#
+# Boolean :: Primitive  (Python bool)
+#
+#       TRUE and FALSE
+#
+# OctetString :: Primitive  (Python bytes)
+#
+#       arbitrary octet strings
+#
+# X509CertError :: Primitive  (Python ValueError)
+#
+#       "the provided OctetString is not an X509Cert"
+#
+# PublicKeyError :: Primitive  (Python ValueError)
+#
+#       "the provided OctetString is not a PublicKey"
+#
+# X509Cert :: OctetString  (X.509 v3 certificates)
+#
+#       A well-formed value of type X509Cert is an ASN.1 sequence of many
+#       nested structures as defined by X.509 v3, including a well-formed
+#       value of type PublicKey.
+#
+# PublicKey :: OctetString  (X9.62 prime256v1 public keys)
+#
+#       A well-formed value of type PublicKey can be converted into an element
+#       of the elliptic curve group prime256v1, which MUST NOT be the point at
+#       infinity.  The value is in either the uncompressed form, the
+#       compressed form, or the hybrid form.
+#
+# Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
+#
+#       A well-formed value of type Signature is an ASN.1 sequence of two
+#       integers r and s, where both of them MUST be a positive integer less
+#       than q.  Please note that an ill-formed value of such type passed into
+#       the procedure verify_signature() does not cause an exception, because
+#       an ill-formed digital signature is just considered invalid without
+#       further processing.
+#
+# Message :: OctetString  (arbitrary octet strings)
+#
+#       Any arbitrary octet string is a well-formed value of type Message.
+#       The value will be hashed into an integer modulo q in a well-defined
+#       way to perform the signature verification process.
 #
 # extract_publickey_from_certificate : X509Cert -> PublicKey
 #                                      except X509CertError
