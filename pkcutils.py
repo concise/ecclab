@@ -1,37 +1,35 @@
+# Public-Key Cryptography Utilities
 #
-#                       Public-Key Cryptography Utilities
-#                       ---------------------------------
-#
-# Boolean :: Primitive  (Python bool)
+#   Boolean :: Primitive  (Python bool)
 #
 #       TRUE and FALSE
 #
-# OctetString :: Primitive  (Python bytes)
+#   OctetString :: Primitive  (Python bytes)
 #
 #       arbitrary octet strings
 #
-# X509CertError :: Primitive  (Python ValueError)
+#   X509CertError :: Primitive  (Python ValueError)
 #
 #       "the provided OctetString is not an X509Cert"
 #
-# PublicKeyError :: Primitive  (Python ValueError)
+#   PublicKeyError :: Primitive  (Python ValueError)
 #
 #       "the provided OctetString is not a PublicKey"
 #
-# X509Cert :: OctetString  (X.509 v3 certificates)
+#   X509Cert :: OctetString  (X.509 v3 certificates)
 #
 #       A well-formed value of type X509Cert is an ASN.1 sequence of many
 #       nested structures as defined by X.509 v3, including a well-formed
 #       value of type PublicKey.
 #
-# PublicKey :: OctetString  (X9.62 prime256v1 public keys)
+#   PublicKey :: OctetString  (X9.62 prime256v1 public keys)
 #
 #       A well-formed value of type PublicKey can be converted into an element
 #       of the elliptic curve group prime256v1, which MUST NOT be the point at
 #       infinity.  The value is in either the uncompressed form, the
 #       compressed form, or the hybrid form.
 #
-# Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
+#   Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
 #
 #       A well-formed value of type Signature is an ASN.1 sequence of two
 #       integers r and s, where both of them MUST be a positive integer less
@@ -40,14 +38,14 @@
 #       an ill-formed digital signature is just considered invalid without
 #       further processing.
 #
-# Message :: OctetString  (arbitrary octet strings)
+#   Message :: OctetString  (arbitrary octet strings)
 #
 #       Any arbitrary octet string is a well-formed value of type Message.
 #       The value will be hashed into an integer modulo q in a well-defined
 #       way to perform the signature verification process.
 #
-# extract_publickey_from_certificate : X509Cert -> PublicKey
-#                                      except X509CertError
+#   extract_publickey_from_certificate : X509Cert -> PublicKey
+#                                        except X509CertError
 #
 #       Return the "BIT STRING" value (the length of which shall be a multiple
 #       of eight, so it is actually an octet string) from the nested field
@@ -56,8 +54,8 @@
 #       X.509 certificate input is not well-formed, the X509CertError
 #       exception will be raised.
 #
-# compress_publickey : PublicKey -> PublicKey
-#                      except PublicKeyError
+#   compress_publickey : PublicKey -> PublicKey
+#                        except PublicKeyError
 #
 #       If the provided PublicKey is already in the compressed form, return it
 #       without any modification.  If the provided is in the uncompressed form
@@ -65,13 +63,15 @@
 #       returned.  If the provided PublicKey is not in a correct format, the
 #       PublicKeyError exception will be raised.
 #
-# verify_signature : (PublicKey, Signature, Message) -> Boolean
-#                    except PublicKeyError
+#   verify_signature : (PublicKey, Signature, Message) -> Boolean
+#                      except PublicKeyError
 #
 #       Check if the provided Signature is valid for the Message under the
 #       PublicKey.  The PublicKeyError exception is raised if and only if the
 #       provided PublicKey is not in a correct format.
 #
+# If any value of the wrong type is passed into the above functions, a Python
+# exception TypeError will be raised.
 
 from P256 import q
 from P256ECC import (
