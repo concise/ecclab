@@ -3,6 +3,7 @@
 # G == E(1)             the selected base point generating the cyclic group
 # E(..., ...)           the factory function for an element in the group E
 # E_from_bytes(...)     construct an element in E from an X9.62 encoded stream
+# E_to_bytes(...)       convert an element in E into an octet string
 # E_contains(...)       check if a Python object is a valid element in E
 # E_take_x_mod_q(M)     returns the value of x-coordinate of M modulo q
 # E_eq(M, N)            returns whether or not M is equal to N
@@ -80,6 +81,17 @@ def E_from_bytes(stream):
         return _import_uncompressed_elm_with_y_parity(stream[1:], y_parity=1)
     else:
         raise E_InputError('the provided input is in an invalid format')
+
+def E_to_bytes(M, compressed=False):
+    assert E_contains(M)
+    if E_eq(M, Z):
+        return b'\x00'
+    elif compressed is True:
+        raise NotImplementedError # TODO return a bytes object of length 33
+    elif compressed is False:
+        raise NotImplementedError # TODO return a bytes object of length 65
+    else:
+        raise E_InputError('argument "compressed" must be True or False')
 
 def E_contains(M):
     return _is_point_at_infinity(M) or _is_on_curve(M)
