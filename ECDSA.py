@@ -1,5 +1,6 @@
-from E import (q, E, E_from_bytes, E_to_bytes, E_contains, E_take_x_mod_q,
-               E_eq, E_neg, E_dbl, E_add, E_mul, E_InputError)
+from ECGroup import (q, E, E_from_bytes, E_to_bytes, E_contains,
+                     E_take_x_mod_q, E_eq, E_neg, E_dbl, E_add, E_mul,
+                     E_InputError)
 
 Z = E(0) # the point at infinity (additive identity) of group E
 G = E(1) # the base point that generates the cyclic group E
