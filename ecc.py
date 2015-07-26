@@ -502,7 +502,7 @@ def ecdsa_decompress_publickey(publickey):
 
 def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
     try:
-        tbscert, *_                     = asn1_parse_sequence(certifi)
+        tbscert, _, _                   = asn1_parse_sequence(certifi)
         _, _, _, _, _, _, pk_info, *_   = asn1_parse_sequence(tbscert)
         alg, pk_bits                    = asn1_parse_sequence(pk_info)
         pk_octets      = asn1_parse_bitstring_as_octet_string(pk_bits)
