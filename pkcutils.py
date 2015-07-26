@@ -199,10 +199,38 @@ exception TypeError will be raised.
 
 '''
 
+import asn1
 from P256 import q
 from P256ECC import (
         E, E_from_bytes, E_to_bytes, E_contains, E_take_x_mod_q, E_eq, E_neg,
         E_dbl, E_add, E_mul, E_InputError)
+
+def ensure_good_subject_public_key_algorithm(alg):
+    if alg != bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
+        raise ValueError
+
+def ensure_good_subject_public_key(pk):
+    E_from_bytes(pk)
+
+def extract_publickey_from_certificate(x509v3cert):
+    try:
+        tbscert, *_                     = asn1.parse_one_SEQUENCE(x509v3cert)
+        _, _, _, _, _, _, pkinfo, *_    = asn1.parse_one_SEQUENCE(tbscert)
+        alg, pkbits                     = asn1.parse_one_SEQUENCE(pkinfo)
+        publickey = asn1.parse_one_BITSTRING_to_an_octet_string(pkbits)
+        ensure_good_subject_public_key_algorithm(alg)
+        ensure_good_subject_public_key(publickey)
+        return publickey
+    except ValueError:
+        # 1. cannot parse the octet string as some value encoded using ASN.1
+        # 2. cannot unpack the sequence; not enough number of values
+        # 3. alg is not { id-ecPublicKey secp256r1 }
+        pass
+    except E_InputError:
+        # 4. the octet string cannot be converted back into a public key point
+        pass
+    raise ValueError
+
 
 Z = E(0) # the point at infinity (additive identity) of group E
 G = E(1) # the base point that generates the cyclic group E
@@ -350,22 +378,6 @@ def _rfc6979_bits2int(octetstr):
     qlen = 256
     x = _octets2int(octetstr)
     return (x >> (blen-qlen)) if (blen > qlen) else x
-
-def extract_publickey_from_certificate(x509v3cert):
-    import asn1
-    try:
-        tbscert, *_                     = asn1.parse_one_SEQUENCE(cert)
-        _, _, _, _, _, _, pkinfo, *_    = asn1.parse_one_SEQUENCE(tbscert)
-        alg, pkbits                     = asn1.parse_one_SEQUENCE(pkinfo)
-        pk              = asn1.parse_one_BITSTRING_to_an_octet_string(pkbits)
-    except (ValueError, E_InputError) as e:
-        print('the provided octet string is not a valid X.509 version 3 '
-              'certificate with a secp256r1 elliptic curve subject public key')
-    else:
-        if alg != bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
-            raise ValueError
-        Q = E_from_bytes(pk)
-        return pk
 
 '''
 
