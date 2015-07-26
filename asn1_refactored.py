@@ -48,7 +48,7 @@ def extract_L_from(stream):
         if len(stream) >= 1:
             leading_octet_value = stream[0]
             if leading_octet_value <= 0x7f:
-                L, _ stream[:1], stream[1:]
+                L, _ = stream[:1], stream[1:]
                 return L, _
             elif leading_octet_value == 0x80:
                 raise ValueError
