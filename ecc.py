@@ -133,6 +133,20 @@ def fq_to_integer(elm):
     assert _is_an_fq_representation_(elm)
     return elm[1]
 
+def fq_inv(elm):
+    assert _is_an_fq_representation_(elm)
+    if elm[1] == 0:
+        raise fq_Error
+    return _FqTAG_, pow(elm[1], _q_ - 2, _q_)
+
+def fq_mul(elm1, elm2):
+    assert _is_an_fq_representation_(elm1)
+    assert _is_an_fq_representation_(elm2)
+    return _FqTAG_, (elm1[1] * elm2[1]) % _q_
+
+def fq_div(elm1, elm2):
+    return fq_mul(elm1, fq_inv(elm2))
+
 def fq_to_msb_first_bit_sequence(elm):
     assert _is_an_fq_representation_(elm)
     _, value = elm
@@ -314,4 +328,7 @@ def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
         return False
     if not (1 <= s <= q - 1):
         return False
-    # TODO
+    R = e_add(e_mul(e(1), fq_div(fq(h), fq(s))),
+              e_mul(Q,    fq_div(fq(r), fq(s))))
+    rr = e_to_integer(R) % q
+    return rr == r
