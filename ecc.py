@@ -342,8 +342,13 @@ class ecdsa_Error(BaseException):
     pass
 
 def _sigbaseoctets_to_h_(octetstring):
-    # h <- mod_q(bitstring_to_integer(truncate_to_q_length(hash( msg ))))
-    pass # TODO
+    # h <- mod_q(bitstring_to_integer(truncate_to_q_length(hash( ... ))))
+    assert type(octetstring) is bytes
+    import hashlib
+    sha256_digester = hashlib.sha256()
+    sha256_digester.update(octetstring)
+    digest = sha256_digester.digest()
+    return int.from_bytes(digest, byteorder='big', signed=False) % __q__
 
 def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
     assert _is_an_e_representation_(Q) and not e_eq(Q, e(0))
