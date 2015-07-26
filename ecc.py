@@ -267,7 +267,7 @@ def e_dbl(P):
         return _Z_
     if fp_eq(yP, fp(0)):
         return _Z_
-    # slope = (3 * xP**2 + a) / (2 * yP)
+    # slope = (3 * xP**2 + _a_) / (2 * yP)
     # xR = slope**2 - 2 * xP
     # yR = slope * (xP - xR) - yP
     slope = fp_div(fp_add(fp_mul(fp(3), fp_square(xP)), _a_),
@@ -316,19 +316,24 @@ def e_mul(P, k):
 
 
 
+__q__ = q
+
+class ecdsa_Error(BaseException):
+    pass
+
 def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
     # Q <- e_from_octetstring( key )    MUST NOT BE THE POINT AT INFINITY
     # h <- mod_q(bitstring_to_integer(truncate_to_q_length(hash( msg ))))
     # (r, s) <- asn1_parse_a_sequence_of_two_signed_integer( sig )
     assert _is_an_e_representation_(Q) and not e_eq(Q, e(0))
-    assert type(h) is int and (0 <= h <= q - 1)
+    assert type(h) is int and (0 <= h <= __q__ - 1)
     assert type(r) is int
     assert type(s) is int
-    if not (1 <= r <= q - 1):
+    if not (1 <= r <= __q__ - 1):
         return False
-    if not (1 <= s <= q - 1):
+    if not (1 <= s <= __q__ - 1):
         return False
     R = e_add(e_mul(e(1), fq_div(fq(h), fq(s))),
               e_mul(Q,    fq_div(fq(r), fq(s))))
-    rr = e_to_integer(R) % q
+    rr = e_to_integer(R) % __q__
     return rr == r
