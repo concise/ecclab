@@ -290,3 +290,19 @@ def e_mul(P, k):
         if bit == 1:
             R = e_add(R, P)
     return R
+
+
+
+
+
+
+
+
+
+
+def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
+    assert _is_an_e_representation_(Q)
+    assert type(h) is int
+    assert type(r) is int
+    assert type(s) is int
+    # TODO
