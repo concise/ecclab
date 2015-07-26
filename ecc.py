@@ -324,8 +324,111 @@ def e_mul(P, k):
 class asn1_Error(BaseException):
     pass
 
+def asn1_parse_integer(octetstring):
+    """
+    return an signed integer encoded in this ASN.1 INTEGER
+    """
+    assert type(octetstring) is bytes
+    T, L, V, X = _asn1_extract_T_L_V_X_from(octetstring)
+    assert _asn1_L_value(L) == len(V)
+    if len(X) != 0:
+        raise asn1_Error
+    if T != b'\x02':
+        raise asn1_Error
+    if len(V) >= 2 and V[0] == 0x00 and V[1] <= 0x7f:
+        raise asn1_Error
+    return int.from_bytes(V, byteorder='big', signed=True)
+
+def asn1_parse_bitstring_as_octet_string(octetstring):
+    """
+    return an octet string encoded in this ASN.1 BIT STRING
+    """
+    assert type(octetstring) is bytes
+    T, L, V, X = _asn1_extract_T_L_V_X_from(octetstring)
+    assert _asn1_L_value(L) == len(V)
+    if len(X) != 0:
+        raise asn1_Error
+    if T != b'\x03':
+        raise asn1_Error
+    if V[0] != 0x00:
+        raise asn1_Error
+    return V[1:]
+
+def asn1_parse_sequence(octetstring):
+    """
+    return a sequence of octet strings encoded in this ASN.1 SEQUENCE
+    """
+    assert type(octetstring) is bytes
+    T, L, V, X = _asn1_extract_T_L_V_X_from(octetstring)
+    assert _asn1_L_value(L) == len(V)
+    if len(X) != 0:
+        raise asn1_Error
+    if T != b'\x30':
+        raise asn1_Error
+    items = ()
+    X = V
+    while len(X) != 0:
+        T, L, V, X = _asn1_extract_T_L_V_X_from(X)
+        items += (T + L + V,)
+    return items
+
+def _asn1_extract_T_L_V_X_from(stream):
+    X = stream
+    T, X = _asn1_extract_T_from(X)
+    L, X = _asn1_extract_L_from(X)
+    V, X = _asn1_extract_V_from(X, length=_asn1_L_value(L))
+    return T, L, V, X
+
+def _asn1_L_value(L):
+    if len(L) == 0:
+        raise asn1_Error
+    elif len(L) == 1 and L[0] <= 0x7f:
+        return L[0]
+    elif len(L) == 2 and L[0] == 0x81 and L[1] >= 0x80:
+        return L[1]
+    elif len(L) == L[0] - 0x7f and L[0] >= 0x82 and L[1] != 0x00:
+        return int.from_bytes(L[1:], byteorder='big', signed=False)
+    else:
+        raise asn1_Error
+
+def _asn1_extract_T_from(stream):
+    if len(stream) == 0:
+        raise asn1_Error
+    return stream[:1], stream[1:]
+
+def _asn1_extract_L_from(stream):
+    if len(stream) == 0:
+        raise asn1_Error
+    if stream[0] == 0x80:
+        raise asn1_Error
+    elif stream[0] <= 0x7f:
+        return stream[:1], stream[1:]
+    else:
+        return _asn1_extract_long_L_from(stream)
+
+def _asn1_extract_long_L_from(stream):
+    length = stream[0] - 0x7f
+    if len(stream) < length:
+        raise asn1_Error
+    L, _ = stream[:length], stream[length:]
+    if (length == 2 and L[1] >= 0x80) or L[1] != 0x00:
+        return L, _
+    else:
+        raise asn1_Error
+
+def _asn1_extract_V_from(stream, length):
+    if len(stream) < length:
+        raise asn1_Error
+    return stream[:length], stream[length:]
+
 def _asn1_parse_a_sequence_of_two_signed_integers_(octetstring):
-    pass # TODO
+    seq = asn1_parse_sequence(octetstring)
+    if len(seq) != 2:
+        raise asn1_Error
+    octets1, octets2 = seq
+    int1 = asn1_parse_integer(octets1)
+    int2 = asn1_parse_integer(octets2)
+    return int1, int2
 
 
 
@@ -397,5 +500,29 @@ def ecdsa_decompress_publickey(publickey):
         pass
     raise ecdsa_Error
 
-def ecdsa_extract_publickey_octetstring_from_certificate(certificate):
-    pass # TODO
+def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
+    try:
+        tbscert, *_                     = asn1_parse_sequence(certifi)
+        _, _, _, _, _, _, pk_info, *_   = asn1_parse_sequence(tbscert)
+        alg, pk_bits                    = asn1_parse_sequence(pk_info)
+        pk_octets      = asn1_parse_bitstring_as_octet_string(pk_bits)
+        _ensure_good_ecdsa_algorithm(alg)
+        _ensure_good_ecdsa_publickey(pk_octets)
+        return pk_octets
+    except asn1_Error:
+        pass
+    except ValueError:
+        pass
+    raise ecdsa_Error
+
+def _ensure_good_ecdsa_algorithm(alg):
+    if alg != bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
+        raise ecdsa_Error
+
+def _ensure_good_ecdsa_publickey(pk_octets):
+    try:
+        Q = e_nonzero_from_octetstring(pk_octets)
+        return
+    except e_Error:
+        pass
+    raise ecdsa_Error
