@@ -42,7 +42,7 @@ def fp_from_octetstring(octetstring):
     value = int.from_bytes(octetstring, byteorder='big', signed=False)
     if not (0 <= value <= _p_ - 1):
         raise fp_Error
-    return fp_from_integer(value)
+    return fp(value)
 
 def fp_to_octetstring(elm):
     assert _is_an_fp_representation_(elm)
@@ -149,12 +149,12 @@ def fq_to_msb_first_bit_sequence(elm):
 
 
 
-_a_    = fp_from_integer(a)
-_b_    = fp_from_integer(b)
-_xG_   = fp_from_integer(xG)
-_yG_   = fp_from_integer(yG)
-_xZ_   = fp_from_integer(0)
-_yZ_   = fp_from_integer(0)
+_a_    = fp(a)
+_b_    = fp(b)
+_xG_   = fp(xG)
+_yG_   = fp(yG)
+_xZ_   = fp(0)
+_yZ_   = fp(0)
 _ETAG_ = 'E'
 _G_    = _ETAG_, _xG_, _yG_
 _Z_    = _ETAG_, _xZ_, _yZ_
@@ -198,7 +198,9 @@ def e(spec):
 def e_from_octetstring(octetstring):
     assert type(octetstring) is bytes
     try:
-        if len(octetstring) == 65 and octetstring[0] == 0x04:
+        if len(octetstring) == 1 and octetstring[0] == 0x00:
+            return _Z_
+        elif len(octetstring) == 65 and octetstring[0] == 0x04:
             x = fp_from_octetstring(octetstring[1:33])
             y = fp_from_octetstring(octetstring[33:65])
             assert _is_an_e_representation_((_ETAG_, x, y))
@@ -249,14 +251,14 @@ def e_dbl(P):
     _, xP, yP = P
     if e_eq(P, _Z_):
         return _Z_
-    if fp_eq(yP, fp_from_integer(0)):
+    if fp_eq(yP, fp(0)):
         return _Z_
     # slope = (3 * xP**2 + a) / (2 * yP)
     # xR = slope**2 - 2 * xP
     # yR = slope * (xP - xR) - yP
-    slope = fp_div(fp_add(fp_mul(fp_from_integer(3), fp_square(xP)), _a_),
-                   fp_mul(fp_from_integer(2), yP))
-    xR = fp_sub(fp_square(slope), fp_mul(fp_from_integer(2), xP))
+    slope = fp_div(fp_add(fp_mul(fp(3), fp_square(xP)), _a_),
+                   fp_mul(fp(2), yP))
+    xR = fp_sub(fp_square(slope), fp_mul(fp(2), xP))
     yR = fp_sub(fp_mul(slope, fp_sub(xP, xR)), yP)
     return _ETAG_, xR, yR
 
@@ -301,8 +303,15 @@ def e_mul(P, k):
 
 
 def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
-    assert _is_an_e_representation_(Q)
-    assert type(h) is int
+    # Q <- e_from_octetstring( key )    MUST NOT BE THE POINT AT INFINITY
+    # h <- mod_q(bitstring_to_integer(truncate_to_q_length(hash( msg ))))
+    # (r, s) <- asn1_parse_a_sequence_of_two_signed_integer( sig )
+    assert _is_an_e_representation_(Q) and not e_eq(Q, e(0))
+    assert type(h) is int and (0 <= h <= q - 1)
     assert type(r) is int
     assert type(s) is int
+    if not (1 <= r <= q - 1):
+        return False
+    if not (1 <= s <= q - 1):
+        return False
     # TODO
