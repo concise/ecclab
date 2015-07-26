@@ -11,29 +11,26 @@ class PkcPublickeyError(ValueError, PkcError):
     pass
 
 def pkc_extract_publickey_from_certificate(certificate):
-    if type(certificate) is bytes:
-        return _pkc_extract_publickey_from_certificate(certificate)
-    else:
+    if type(certificate) is not bytes:
         raise PkcTypeError
+    return _pkc_extract_publickey_from_certificate(certificate)
 
 def pkc_compress_publickey(publickey):
-    if type(publickey) is bytes:
-        return _pkc_compress_publickey(publickey)
-    else:
+    if type(publickey) is not bytes:
         raise PkcTypeError
+    return _pkc_compress_publickey(publickey)
 
-def pkc_verify_signature(publickey, message, signatures):
-    if (type(publickey) is bytes and type(message) is bytes
-    and type(signatures) is bytes):
-        return _pkc_verify_signature(publickey, message, signatures)
-    else:
+def pkc_verify_signature(publickey, message, signature):
+    if (type(publickey) is not bytes or type(message) is not bytes
+    or type(signature) is not bytes):
         raise PkcTypeError
+    return _pkc_verify_signature(publickey, message, signature)
 
 def _pkc_extract_publickey_from_certificate(certificate_bytes):
-    pass
+    pass # TODO
 
 def _pkc_compress_publickey(publickey_bytes):
-    pass
+    pass # TODO
 
-def _pkc_verify_signature(publickey_bytes, message_bytes, signatures_bytes):
-    pass
+def _pkc_verify_signature(publickey_bytes, message_bytes, signature_bytes):
+    pass # TODO
