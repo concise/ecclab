@@ -227,9 +227,10 @@ def e_to_octetstring(P, compressed=False):
         xx = fp_to_octetstring(x)
         return bytes([0x02 ^ y_parity]) + xx
 
-def e_to_integer_modulo_q(P):
-    pass
-    # TODO
+def e_to_integer(P):
+    assert _is_an_e_representation_(P)
+    _, x, y = P
+    return fp_to_integer(y)
 
 def e_eq(P, Q):
     pass
