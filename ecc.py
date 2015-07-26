@@ -273,10 +273,13 @@ def e_add(P, Q):
         return _Z_
     if e_eq(P, Q):
         return e_dbl(P)
-    # TODO
     # slope = (yP - yQ) / (xP - xQ)
     # xR = slope**2 - xP - xQ
     # yR = slope * (xP - xR) - yP
+    slope = fp_div(fp_sub(yP, yQ), fp_sub(xP, xQ))
+    xR = fp_sub(fp_sub(fp_square(slope), xP), xQ)
+    yR = fp_sub(fp_mul(slope, fp_sub(xP, xR)), yP)
+    return _ETAG_, xR, yR
 
 def e_mul(P, k):
     assert _is_an_e_representation_(P)
