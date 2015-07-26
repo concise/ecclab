@@ -1,132 +1,133 @@
-# Public-Key Cryptography Utilities
-#
-#   Boolean :: Primitive  (Python bool)
-#
-#       TRUE and FALSE
-#
-#   OctetString :: Primitive  (Python bytes)
-#
-#       arbitrary octet strings
-#
-#   X509CertError :: Primitive  (Python ValueError)
-#
-#       "the provided OctetString is not an X509Cert"
-#
-#   PublicKeyError :: Primitive  (Python ValueError)
-#
-#       "the provided OctetString is not a PublicKey"
-#
-#
-#
-#   X509Cert :: OctetString  (X.509 v3 certificates)
-#
-#       A well-formed value of type X509Cert is an ASN.1 sequence of many
-#       nested structures as defined by X.509 v3, including a well-formed
-#       value of type PublicKey.
-#
-#       The subjectPublicKeyInfo field in a TBSCertificate should be in one of
-#       the following three formats:
-#
-#                       AlgorithmIdentifier                   BIT STRING
-#                            algorithm                     subjectPublicKey
-#       ------------------------------------------------- -------------------
-#       30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 42 00 04 {X} {Y}
-#       30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 22 00 02 {X}
-#       30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 22 00 03 {X}
-#             ^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^
-#               OBJECT IDENTIFIER     OBJECT IDENTIFIER
-#                id-ecPublicKey          prime256v1
-#               1.2.840.10045.2.1    1.2.840.10045.3.1.7
-#
-#
-#
-#   PublicKey :: OctetString  (X9.62 prime256v1 public keys)
-#
-#       A well-formed value of type PublicKey can be converted into an element
-#       of the elliptic curve group prime256v1 using the rules defined in
-#       X9.62, and the result MUST NOT be the point at infinity.  The octet
-#       string is either in the "uncompressed" or in the "compressed" form,
-#       and its length should be either 33 == (1 + 32) or 65 == (1 + 32 + 32),
-#       and its first octet MUST.
-#
-#       +------+--------------------------+--------------------------+
-#       | 0x04 | an octet string X for xQ | an octet string Y for yQ |
-#       +------+--------------------------+--------------------------+
-#
-#       +------+--------------------------+
-#       | 0x02 | an octet string X for xQ |  yQ == 0  (mod 2)
-#       +------+--------------------------+
-#
-#       +------+--------------------------+
-#       | 0x03 | an octet string X for xQ |  yQ == 1  (mod 2)
-#       +------+--------------------------+
-#
-#       The field elements (xQ, yQ) MUST satisfy the elliptic curve equation.
-#
-#
-#
-#   Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
-#
-#       A well-formed value of type Signature is an ASN.1 sequence of two
-#       integers r and s, where both of them MUST be a positive integer less
-#       than q.  Please note that an ill-formed value of such type passed into
-#       the procedure verify_signature() does not cause an exception, because
-#       an ill-formed digital signature is just considered invalid without
-#       further processing.
-#
-#       +------+------+------------------------------------------------------+
-#       |      |      | +----+------+-----------+  +----+------+-----------+ |
-#       | 0x30 |  L1  | |0x02|  L2  |     r     |  |0x02|  L3  |     s     | |
-#       |      |      | +----+------+-----------+  +----+------+-----------+ |
-#       +------+------+------------------------------------------------------+
-#
-#       The integers (r, s) MUST satisfy:  1 <= r <= q-1  and  1 <= s <= q-1.
-#
-#
-#
-#   Message :: OctetString  (arbitrary octet strings)
-#
-#       Any arbitrary octet string is a well-formed value of type Message.
-#       The value will be hashed into an integer modulo q in a well-defined
-#       way to perform the signature verification process.
-#
-#
-#
-#   extract_publickey_from_certificate : X509Cert -> PublicKey
-#                                        except X509CertError
-#
-#       Return the "BIT STRING" value (the length of which shall be a multiple
-#       of eight, so it is actually an octet string) from the nested field
-#       tbsCertificate -> subjectPublicKeyInfo -> subjectPublicKey if such
-#       field exists and the value is a valid PublicKey.  If the provided
-#       X.509 certificate input is not well-formed, an X509CertError exception
-#       will be raised.
-#
-#   compress_publickey : PublicKey -> PublicKey
-#                        except PublicKeyError
-#
-#       If the provided PublicKey is already in the compressed form, return it
-#       without any modification.  If the provided is in the uncompressed form
-#       or the hybrid form as specified in X9.62, the compressed equivalent is
-#       returned.  If the provided PublicKey is not in a correct format, a
-#       PublicKeyError exception will be raised.
-#
-#   decompress_publickey : PublicKey -> PublicKey
-#                          except PublicKeyError
-#
-#       Decompress the provided PublicKey if possible and return the result.
-#       If the provided PublicKey is not in a correct format, a PublicKeyError
-#       exception will be raised.
-#
-#   verify_signature : (PublicKey, Signature, Message) -> Boolean
-#                      except PublicKeyError
-#
-#       Check if the provided Signature is valid for the Message under the
-#       PublicKey.  A PublicKeyError exception is raised if and only if the
-#       provided PublicKey is not in a correct format.
-#
-# If any value of the wrong type is passed into the above functions, a Python
-# exception TypeError will be raised.
+'''
+Public-Key Cryptography Utilities
+
+    Boolean :: Primitive  (Python bool)
+
+        TRUE and FALSE
+
+    OctetString :: Primitive  (Python bytes)
+
+        arbitrary octet strings
+
+    X509CertError :: Primitive  (Python ValueError)
+
+        "the provided OctetString is not an X509Cert"
+
+    PublicKeyError :: Primitive  (Python ValueError)
+
+        "the provided OctetString is not a PublicKey"
+
+    X509Cert :: OctetString  (X.509 v3 certificates)
+
+        A well-formed value of type X509Cert is an ASN.1 sequence of many
+        nested structures as defined by X.509 v3, including a well-formed
+        value of type PublicKey.
+
+        The subjectPublicKeyInfo field in a TBSCertificate should be in one of
+        the following three formats:
+
+                        AlgorithmIdentifier                   BIT STRING
+                             algorithm                     subjectPublicKey
+        ------------------------------------------------- -------------------
+        30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 42 00 04 {X} {Y}
+        30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 22 00 02 {X}
+        30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 22 00 03 {X}
+              ^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^
+                OBJECT IDENTIFIER     OBJECT IDENTIFIER
+                 id-ecPublicKey          prime256v1
+                1.2.840.10045.2.1    1.2.840.10045.3.1.7
+
+
+
+    PublicKey :: OctetString  (X9.62 prime256v1 public keys)
+
+        A well-formed value of type PublicKey can be converted into an element
+        of the elliptic curve group prime256v1 using the rules defined in
+        X9.62, and the result MUST NOT be the point at infinity.  The octet
+        string is either in the "uncompressed" or in the "compressed" form,
+        and its length should be either 33 == (1 + 32) or 65 == (1 + 32 + 32),
+        and its first octet MUST.
+
+        +------+--------------------------+--------------------------+
+        | 0x04 | an octet string X for xQ | an octet string Y for yQ |
+        +------+--------------------------+--------------------------+
+
+        +------+--------------------------+
+        | 0x02 | an octet string X for xQ |  yQ == 0  (mod 2)
+        +------+--------------------------+
+
+        +------+--------------------------+
+        | 0x03 | an octet string X for xQ |  yQ == 1  (mod 2)
+        +------+--------------------------+
+
+        The field elements (xQ, yQ) MUST satisfy the elliptic curve equation.
+
+
+
+    Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
+
+        A well-formed value of type Signature is an ASN.1 sequence of two
+        integers r and s, where both of them MUST be a positive integer less
+        than q.  Please note that an ill-formed value of such type passed into
+        the procedure verify_signature() does not cause an exception, because
+        an ill-formed digital signature is just considered invalid without
+        further processing.
+
+        +------+------+------------------------------------------------------+
+        |      |      | +----+------+-----------+  +----+------+-----------+ |
+        | 0x30 |  L1  | |0x02|  L2  |     r     |  |0x02|  L3  |     s     | |
+        |      |      | +----+------+-----------+  +----+------+-----------+ |
+        +------+------+------------------------------------------------------+
+
+        The integers (r, s) MUST satisfy:  1 <= r <= q-1  and  1 <= s <= q-1.
+
+
+
+    Message :: OctetString  (arbitrary octet strings)
+
+        Any arbitrary octet string is a well-formed value of type Message.
+        The value will be hashed into an integer modulo q in a well-defined
+        way to perform the signature verification process.
+
+
+
+    extract_publickey_from_certificate : X509Cert -> PublicKey
+                                         except X509CertError
+
+        Return the "BIT STRING" value (the length of which shall be a multiple
+        of eight, so it is actually an octet string) from the nested field
+        tbsCertificate -> subjectPublicKeyInfo -> subjectPublicKey if such
+        field exists and the value is a valid PublicKey.  If the provided
+        X.509 certificate input is not well-formed, an X509CertError exception
+        will be raised.
+
+    compress_publickey : PublicKey -> PublicKey
+                         except PublicKeyError
+
+        If the provided PublicKey is already in the compressed form, return it
+        without any modification.  If the provided is in the uncompressed form
+        or the hybrid form as specified in X9.62, the compressed equivalent is
+        returned.  If the provided PublicKey is not in a correct format, a
+        PublicKeyError exception will be raised.
+
+    decompress_publickey : PublicKey -> PublicKey
+                           except PublicKeyError
+
+        Decompress the provided PublicKey if possible and return the result.
+        If the provided PublicKey is not in a correct format, a PublicKeyError
+        exception will be raised.
+
+    verify_signature : (PublicKey, Signature, Message) -> Boolean
+                       except PublicKeyError
+
+        Check if the provided Signature is valid for the Message under the
+        PublicKey.  A PublicKeyError exception is raised if and only if the
+        provided PublicKey is not in a correct format.
+
+If any value of the wrong type is passed into the above functions, a Python
+exception TypeError will be raised.
+
+'''
 
 from P256 import q
 from P256ECC import (
