@@ -248,14 +248,12 @@ def e_dbl(P):
     assert _is_an_e_representation_(P)
     _, xP, yP = P
     if e_eq(P, _Z_):
-        print('P == 0')
         return _Z_
     if fp_eq(yP, fp_from_integer(0)):
-        print('P == 0/2 ?!')
         return _Z_
-    # s = (3 * xP**2 + a) / (2 * yP)
-    # xR = s**2 - 2 * xP
-    # yR = s * (xP - xR) - yP
+    # slope = (3 * xP**2 + a) / (2 * yP)
+    # xR = slope**2 - 2 * xP
+    # yR = slope * (xP - xR) - yP
     slope = fp_div(fp_add(fp_mul(fp_from_integer(3), fp_square(xP)), _a_),
                    fp_mul(fp_from_integer(2), yP))
     xR = fp_sub(fp_square(slope), fp_mul(fp_from_integer(2), xP))
@@ -267,7 +265,18 @@ def e_add(P, Q):
     assert _is_an_e_representation_(Q)
     _, xP, yP = P
     _, xQ, yQ = Q
+    if e_eq(P, _Z_):
+        return Q
+    if e_eq(Q, _Z_):
+        return P
+    if e_eq(P, e_neg(Q)):
+        return _Z_
+    if e_eq(P, Q):
+        return e_dbl(P)
     # TODO
+    # slope = (yP - yQ) / (xP - xQ)
+    # xR = slope**2 - xP - xQ
+    # yR = slope * (xP - xR) - yP
 
 def e_mul(P, k):
     assert _is_an_e_representation_(P)
