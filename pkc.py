@@ -40,8 +40,9 @@ def _pkc_ensure_good_subject_public_key_algorithm(alg):
 
 def _pkc_ensure_good_subject_public_key(pk):
     try:
-        p256.E_from_bytes(pk)
-        return
+        Q = p256.E_from_bytes(pk)
+        if not p256.E_eq(Q, p256.Z):
+            return
     except p256.P256Error:
         pass
     raise ValueError
