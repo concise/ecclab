@@ -236,7 +236,7 @@ def e_eq(P, Q):
     assert _is_an_e_representation_(P)
     assert _is_an_e_representation_(Q)
     _, xP, yP = P
-    _, xQ, yQ = P
+    _, xQ, yQ = Q
     return fp_eq(xP, xQ) and fp_eq(yP, yQ)
 
 def e_neg(P):
@@ -245,13 +245,31 @@ def e_neg(P):
     return _ETAG_, x, fp_neg(y)
 
 def e_dbl(P):
-    pass
-    # TODO
+    assert _is_an_e_representation_(P)
+    _, xP, yP = P
+    if e_eq(P, _Z_):
+        print('P == 0')
+        return _Z_
+    if fp_eq(yP, fp_from_integer(0)):
+        print('P == 0/2 ?!')
+        return _Z_
+    # s = (3 * xP**2 + a) / (2 * yP)
+    # xR = s**2 - 2 * xP
+    # yR = s * (xP - xR) - yP
+    slope = fp_div(fp_add(fp_mul(fp_from_integer(3), fp_square(xP)), _a_),
+                   fp_mul(fp_from_integer(2), yP))
+    xR = fp_sub(fp_square(slope), fp_mul(fp_from_integer(2), xP))
+    yR = fp_sub(fp_mul(slope, fp_sub(xP, xR)), yP)
+    return _ETAG_, xR, yR
 
 def e_add(P, Q):
-    pass
+    assert _is_an_e_representation_(P)
+    assert _is_an_e_representation_(Q)
+    _, xP, yP = P
+    _, xQ, yQ = Q
     # TODO
 
 def e_mul(P, k):
-    pass
-    # TODO use fq_ function
+    assert _is_an_e_representation_(P)
+    assert _is_an_fq_representation_(k)
+    # TODO
