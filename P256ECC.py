@@ -22,7 +22,7 @@ p = p256.p
 q = p256.q
 a = GFp(p256.a)
 b = GFp(p256.b)
-G = GFp(p256.Gx), GFp(p256.Gy)
+G = GFp(p256.xG), GFp(p256.yG)
 Z = GFp(0), GFp(0)
 
 def _E_is_point_at_infinity(M):
