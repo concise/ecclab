@@ -196,14 +196,36 @@ def e(spec):
         assert False
 
 def e_from_octetstring(octetstring):
-    pass
-    # TODO
-    # 0x04       uncompressed
-    # 0x02, 0x03 compressed with one parity bit
+    assert type(octetstring) is bytes
+    try:
+        if len(octetstring) == 65 and octetstring[0] == 0x04:
+            x = fp_from_octetstring(octetstring[1:33])
+            y = fp_from_octetstring(octetstring[33:65])
+            assert _is_an_e_representation_((_ETAG_, x, y))
+            return _ETAG_, x, y
+        elif len(octetstring) == 33 and octetstring[0] in {0x02, 0x03}:
+            y_parity = octetstring[0] & 1
+            x = fp_from_octetstring(octetstring[1:33])
+            w = fp_add(fp_add(fp_cube(x), fp_mul(_a_, x)), _b_)
+            y = fp_sqrt(w, parity=y_parity)
+            assert _is_an_e_representation_((_ETAG_, x, y))
+            return _ETAG_, x, y
+    except FpError:
+        pass
+    raise EError
 
 def e_to_octetstring(P, compressed=False):
-    pass
-    # TODO
+    assert _is_an_e_representation_(P)
+    _, x, y = P
+    y_parity = fp_parity_of(y)
+    assert y_parity in {0, 1}
+    if not compressed:
+        xx = fp_to_octetstring(x)
+        yy = fp_to_octetstring(y)
+        return b'\x04' + xx + yy
+    else:
+        xx = fp_to_octetstring(x)
+        return bytes([0x02 ^ y_parity]) + xx
 
 def e_to_integer_modulo_q(P):
     pass
