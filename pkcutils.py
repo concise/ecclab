@@ -22,8 +22,6 @@
 #       nested structures as defined by X.509 v3, including a well-formed
 #       value of type PublicKey.
 #
-#       https://tools.ietf.org/html/rfc5280#section-4.1
-#
 #   PublicKey :: OctetString  (X9.62 prime256v1 public keys)
 #
 #       A well-formed value of type PublicKey can be converted into an element
@@ -33,19 +31,17 @@
 #       and its length should be either 33 == (1 + 32) or 65 == (1 + 32 + 32),
 #       and its first octet MUST.
 #
-#       https://tools.ietf.org/html/rfc5480#section-2.2
+#       +------+--------------------------+--------------------------+
+#       | 0x04 | an octet string X for xQ | an octet string Y for yQ |
+#       +------+--------------------------+--------------------------+
 #
-#           +------+--------------------------+--------------------------+
-#           | 0x04 | an octet string X for xQ | an octet string Y for yQ |
-#           +------+--------------------------+--------------------------+
+#       +------+--------------------------+
+#       | 0x02 | an octet string X for xQ |  yQ == 0  (mod 2)
+#       +------+--------------------------+
 #
-#           +------+--------------------------+
-#           | 0x03 | an octet string X for xQ |  yQ == 1  (mod 2)
-#           +------+--------------------------+
-#
-#           +------+--------------------------+
-#           | 0x02 | an octet string X for xQ |  yQ == 0  (mod 2)
-#           +------+--------------------------+
+#       +------+--------------------------+
+#       | 0x03 | an octet string X for xQ |  yQ == 1  (mod 2)
+#       +------+--------------------------+
 #
 #   Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
 #
@@ -55,6 +51,12 @@
 #       the procedure verify_signature() does not cause an exception, because
 #       an ill-formed digital signature is just considered invalid without
 #       further processing.
+#
+#       +------+------+------------------------------------------------------+
+#       |      |      | +------+------+---------+  +------+------+---------+ |
+#       | 0x30 |  L1  | | 0x02 |  L2  |    r    |  | 0x02 |  L3  |    s    | |
+#       |      |      | +------+------+---------+  +------+------+---------+ |
+#       +------+------+------------------------------------------------------+
 #
 #   Message :: OctetString  (arbitrary octet strings)
 #
@@ -183,8 +185,8 @@ def _decode_a_signature_from_an_octet_string(sig):
     seqbody, tail = _parse_an_asn1_sequence(sig)
     if len(tail) != 0:
         raise SignatureVerifierError('bad input')
-    r, tail = parse_asn1_integer(sequence_body)
-    s, tail = parse_asn1_integer(tail)
+    r, tail = _parse_an_asn1_signed_integer(sequence_body)
+    s, tail = _parse_an_asn1_signed_integer(tail)
     if len(tail) != 0:
         raise SignatureVerifierError('bad input')
     if 0 < r and r < q and 0 < s and s < q:
@@ -256,36 +258,39 @@ def _rfc6979_bits2int(octetstr):
                 Housley, R., and W. Polk, "Internet X.509 Public Key
                 Infrastructure Certificate and Certificate Revocation
                 List (CRL) Profile", RFC 5280, May 2008.
+                https://tools.ietf.org/html/rfc5280
 
                 4.1.    Basic Certificate Fields
 
 [RFC5480]       Turner, S., Brown, D., Yiu, K., Housley, R., and T. Polk,
                 "Elliptic Curve Cryptography Subject Public Key Information",
-                RFC 5480, March 2009.
+                RFC 5480, March 2009. https://tools.ietf.org/html/rfc5480
 
                 2.2.    Subject Public Key
 
 [SEC1]          Standards for Efficient Cryptography Group (SECG), "SEC 1:
                 Elliptic Curve Cryptography", Version 2.0, May 2009.
+                http://www.secg.org/sec1-v2.pdf
 
                 2.3.1   Bit-String-to-Octet-String Conversion
                 2.3.4   Octet-String-to-Elliptic-Curve-Point Conversion
                 3.2.2   Validation of Elliptic Curve Public Keys
                 3.2.3   Partial Validation of Elliptic Curve Public Keys
                 C.3     Syntax for Elliptic Curve Public Keys
+                C.5     Syntax for Signature and Key Establishment Schemes
 
 [SEC2]          Standards for Efficient Cryptography Group (SECG), "SEC 2:
                 Recommended Elliptic Curve Domain Parameters", Version 2.0,
-                January 2010.
+                January 2010. http://www.secg.org/sec2-v2.pdf
 
                 2.1     Properties of Elliptic Curve Domain Parameters over Fp
                 2.4.2   Recommended Parameters secp256r1
 
-                "secp256r1" means:
+Note that "secp256r1" means:
 
-                sec     standards for efficient cryptography
-                p256    curve over a prime field Fp; bit length of p is 256
-                r       verifiably random parameters (non-Koblitz)
-                1       the sequence number
+        sec     standards for efficient cryptography
+        p256    elliptic curve over a prime field Fp; bit length of p is 256
+        r       verifiably random parameters (non-Koblitz)
+        1       the sequence number
 
 '''
