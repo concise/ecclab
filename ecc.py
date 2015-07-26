@@ -233,12 +233,16 @@ def e_to_integer(P):
     return fp_to_integer(y)
 
 def e_eq(P, Q):
-    pass
-    # TODO
+    assert _is_an_e_representation_(P)
+    assert _is_an_e_representation_(Q)
+    _, xP, yP = P
+    _, xQ, yQ = P
+    return fp_eq(xP, xQ) and fp_eq(yP, yQ)
 
 def e_neg(P):
-    pass
-    # TODO
+    assert _is_an_e_representation_(P)
+    _, x, y = P
+    return _ETAG_, x, fp_neg(y)
 
 def e_dbl(P):
     pass
