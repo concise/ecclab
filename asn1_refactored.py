@@ -24,7 +24,7 @@ def asn1_parse_one_INTEGER(stream):
         raise ValueError
     return int.from_bytes(V, byteorder='big', signed=True)
 
-def asn1_parse_one_BITSTRING_assuming_8_multi(stream):
+def asn1_parse_one_BITSTRING_to_an_octet_string(stream):
     T, L, V, X = extract_T_L_V_X_from(stream)
     assert value_of_L(L) == len(V)
     if len(X) != 0:
