@@ -375,10 +375,22 @@ def ecdsa_verify_signature(publickey, message, signature):
     raise ecdsa_Error
 
 def ecdsa_compress_publickey(publickey):
-    pass # TODO
+    assert type(publickey) is bytes
+    try:
+        Q = e_nonzero_from_octetstring(publickey)
+        return e_to_octetstring(Q, compressed=True)
+    except e_Error:
+        pass
+    raise ecdsa_Error
 
 def ecdsa_decompress_publickey(publickey):
-    pass # TODO
+    assert type(publickey) is bytes
+    try:
+        Q = e_nonzero_from_octetstring(publickey)
+        return e_to_octetstring(Q, compressed=False)
+    except e_Error:
+        pass
+    raise ecdsa_Error
 
 def ecdsa_extract_publickey_octetstring_from_certificate(certificate):
     pass # TODO
