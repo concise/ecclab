@@ -16,11 +16,29 @@
 #
 #       "the provided OctetString is not a PublicKey"
 #
+#
+#
 #   X509Cert :: OctetString  (X.509 v3 certificates)
 #
 #       A well-formed value of type X509Cert is an ASN.1 sequence of many
 #       nested structures as defined by X.509 v3, including a well-formed
 #       value of type PublicKey.
+#
+#       The subjectPublicKeyInfo field in a TBSCertificate should be in one of
+#       the following three formats:
+#
+#                       AlgorithmIdentifier                   BIT STRING
+#                            algorithm                     subjectPublicKey
+#       ------------------------------------------------- -------------------
+#       30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 42 00 04 {X} {Y}
+#       30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 22 00 02 {X}
+#       30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 22 00 03 {X}
+#             ^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^
+#               OBJECT IDENTIFIER     OBJECT IDENTIFIER
+#                id-ecPublicKey          prime256v1
+#               1.2.840.10045.2.1    1.2.840.10045.3.1.7
+#
+#
 #
 #   PublicKey :: OctetString  (X9.62 prime256v1 public keys)
 #
@@ -43,6 +61,10 @@
 #       | 0x03 | an octet string X for xQ |  yQ == 1  (mod 2)
 #       +------+--------------------------+
 #
+#       The field elements (xQ, yQ) MUST satisfy the elliptic curve equation.
+#
+#
+#
 #   Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
 #
 #       A well-formed value of type Signature is an ASN.1 sequence of two
@@ -53,16 +75,22 @@
 #       further processing.
 #
 #       +------+------+------------------------------------------------------+
-#       |      |      | +------+------+---------+  +------+------+---------+ |
-#       | 0x30 |  L1  | | 0x02 |  L2  |    r    |  | 0x02 |  L3  |    s    | |
-#       |      |      | +------+------+---------+  +------+------+---------+ |
+#       |      |      | +----+------+-----------+  +----+------+-----------+ |
+#       | 0x30 |  L1  | |0x02|  L2  |     r     |  |0x02|  L3  |     s     | |
+#       |      |      | +----+------+-----------+  +----+------+-----------+ |
 #       +------+------+------------------------------------------------------+
+#
+#       The integers (r, s) MUST satisfy:  1 <= r <= q-1  and  1 <= s <= q-1.
+#
+#
 #
 #   Message :: OctetString  (arbitrary octet strings)
 #
 #       Any arbitrary octet string is a well-formed value of type Message.
 #       The value will be hashed into an integer modulo q in a well-defined
 #       way to perform the signature verification process.
+#
+#
 #
 #   extract_publickey_from_certificate : X509Cert -> PublicKey
 #                                        except X509CertError
@@ -121,7 +149,7 @@ def extract_an_ecdsa_public_key_octets_from_an_x509_certificate(stream):
     if len(tail) != 0:
         raise SignatureVerifierError('bad input')
     #
-    # TODO: Need improvement later
+    # TODO: Might need improvement later
     #
     # Because I'm too lazy to actually parse the whole X.509 certificate
     # structure, for now I am going to make a shortcut here...
