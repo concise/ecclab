@@ -8,7 +8,15 @@ class P256ValueError(P256Error, ValueError):
     pass
 
 def p256_validate_ecdsa_Q_h_r_s_quadruple(Q, h, r, s):
+    if not E_contains(Q):
+        return False
     if E_eq(Q, Z):
+        return False
+    if not (0 <= h <= q-1):
+        return False
+    if not (1 <= r <= q-1):
+        return False
+    if not (1 <= s <= q-1):
         return False
     r2 = E_take_x_mod_q(E_add(E_mul(G, _div_(h, s)), E_mul(Q, _div_(r, s))))
     return (r - r2) % q == 0

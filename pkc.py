@@ -31,6 +31,8 @@ def pkc_verify_signature(publickey, message, signature):
 
 
 
+
+
 def _pkc_ensure_good_subject_public_key_algorithm(alg):
     if alg == bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
         return
@@ -49,7 +51,7 @@ def _pkc_extract_publickey_from_certificate(cert):
         tbscert, *_                     = asn1.asn1_parse_sequence(cert)
         _, _, _, _, _, _, pkinfo, *_    = asn1.asn1_parse_sequence(tbscert)
         alg, pkbits                     = asn1.asn1_parse_sequence(pkinfo)
-        publickey                       = asn1.asn1_parse_bitstring(pkbits)
+        publickey       = asn1.asn1_parse_bitstring_as_octet_string(pkbits)
         _pkc_ensure_good_subject_public_key_algorithm(alg)
         _pkc_ensure_good_subject_public_key(publickey)
         return publickey
@@ -69,14 +71,9 @@ def _pkc_compress_publickey(publickey_bytes):
 
 def _pkc_verify_signature(publickey_bytes, message_bytes, signature_bytes):
     try:
-        q = p256.q
         rr, ss = asn1.asn1_parse_sequence(signature_bytes)
         r = asn1.asn1_parse_integer(rr)
         s = asn1.asn1_parse_integer(ss)
-        if not (1 <= r <= q-1):
-            return False
-        if not (1 <= s <= q-1):
-            return False
     except asn1.Asn1Error:
         return False
     h = _hash_encode_an_octet_string_into_an_integer_modulo_q(message_bytes)

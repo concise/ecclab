@@ -1,9 +1,6 @@
 class Asn1Error(BaseException):
     pass
 
-class Asn1NotImplementedError(Asn1Error, NotImplementedError):
-    pass
-
 class Asn1TypeError(Asn1Error, TypeError):
     pass
 
@@ -18,16 +15,13 @@ def asn1_parse_integer(octetstring):
         raise Asn1TypeError
     return _asn1_parse_integer(octetstring)
 
-def asn1_parse_bitstring(octetstring, as_octet_string=True):
+def asn1_parse_bitstring_as_octet_string(octetstring):
     """
     return an octet string encoded in this ASN.1 BIT STRING
     """
-    if as_octet_string is True:
-        if type(octetstring) is not bytes:
-            raise Asn1TypeError
-        return _asn1_parse_bitstring(octetstring)
-    else:
-        raise Asn1NotImplementedError
+    if type(octetstring) is not bytes:
+        raise Asn1TypeError
+    return _asn1_parse_bitstring(octetstring)
 
 def asn1_parse_sequence(octetstring):
     """
