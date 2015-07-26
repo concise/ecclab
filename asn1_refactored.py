@@ -24,6 +24,17 @@ def asn1_parse_one_INTEGER(stream):
         raise ValueError
     return int.from_bytes(V, byteorder='big', signed=True)
 
+def asn1_parse_one_BITSTRING_assuming_8_multi(stream):
+    T, L, V, X = extract_T_L_V_X_from(stream)
+    assert value_of_L(L) == len(V)
+    if len(X) != 0:
+        raise ValueError
+    if T != b'\x03':
+        raise ValueError
+    if V[0] != 0x00:
+        raise ValueError
+    return V[1:]
+
 # ----------------------------------------------------------------------------
 
 def extract_T_L_V_X_from(stream):
