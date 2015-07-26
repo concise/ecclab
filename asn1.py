@@ -10,7 +10,7 @@ def parse_asn1_sequence(stream):
     with a tuple of bytes representing the ordered sequence in the provided
     ASN.1 SEQUENCE value.
     """
-    raise NotImplementedError
+    raise NotImplementedError # TODO
 
 def parse_asn1_integer(stream):
     """
@@ -18,7 +18,7 @@ def parse_asn1_integer(stream):
     just as what parse_asn1_anything does, but the V will be replaced with an
     int representing the signed integer value of the provided ASN.1 INTEGER.
     """
-    raise NotImplementedError
+    raise NotImplementedError # TODO
 
 def parse_asn1_anything(tlv):
     """
@@ -63,7 +63,17 @@ def parse_asn1_length_value_pair_with_long_length(lv):
     elif lv[0] - 0x80 == 3:
         return parse_asn1_length_value_pair_with_4_length_octets(lv)
     else:
-        raise ValueError(BAD_ASN1_OR_TOO_LONG)
+        #
+        # A shortest valid ASN.1 L-V octet string in this case will be:
+        #
+        # +------+------+------+------+------+-------------------------+
+        # | 0x84 | 0x01 | 0x00 | 0x00 | 0x00 | ??????????????????????? |
+        # +------+------+------+------+------+-------------------------+
+        #                                         0x01000000 octets
+        if len(lv) < 5 + 0x01000000:
+            raise ValueError(NOT_AN_ASN1_ENCODED)
+        else:
+            raise ValueError(BAD_ASN1_OR_TOO_LONG)
 
 def parse_asn1_length_value_pair_with_2_length_octets(lv):
     assert type(lv) is bytes
