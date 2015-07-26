@@ -17,7 +17,7 @@ q  = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
 _p_     = p
 _FpTAG_ = 'Fp'
 
-class FpError(BaseException):
+class fp_Error(BaseException):
     pass
 
 def _is_an_fp_representation_(obj):
@@ -38,10 +38,10 @@ def fp_to_integer(elm):
 def fp_from_octetstring(octetstring):
     assert type(octetstring) is bytes
     if len(octetstring) != 32:
-        raise FpError
+        raise fp_Error
     value = int.from_bytes(octetstring, byteorder='big', signed=False)
     if not (0 <= value <= _p_ - 1):
-        raise FpError
+        raise fp_Error
     return fp_from_integer(value)
 
 def fp_to_octetstring(elm):
@@ -71,7 +71,7 @@ def fp_sub(elm1, elm2):
 def fp_inv(elm):
     assert _is_an_fp_representation_(elm)
     if elm[1] == 0:
-        raise FpError
+        raise fp_Error
     return _FpTAG_, pow(elm[1], _p_ - 2, _p_)
 
 def fp_mul(elm1, elm2):
@@ -93,7 +93,7 @@ def fp_sqrt(elm, parity=None):
     assert parity is None or type(parity) is int
     candidate = _FpTAG_, pow(elm[1], (_p_ + 1) // 4, _p_)
     if fp_neq(fp_square(candidate), elm):
-        raise FpError
+        raise fp_Error
     if parity is None or fp_parity_of(candidate) == parity & 1:
         return candidate
     else:
@@ -115,7 +115,7 @@ def fp_parity_of(elm):
 _q_     = q
 _FqTAG_ = 'Fq'
 
-class FqError(BaseException):
+class fq_Error(BaseException):
     pass
 
 def _is_an_fq_representation_(obj):
@@ -159,7 +159,7 @@ _ETAG_ = 'E'
 _G_    = _ETAG_, _xG_, _yG_
 _Z_    = _ETAG_, _xZ_, _yZ_
 
-class EError(BaseException):
+class e_Error(BaseException):
     pass
 
 def _is_a_2d_fp_space_point_(obj):
@@ -210,9 +210,9 @@ def e_from_octetstring(octetstring):
             y = fp_sqrt(w, parity=y_parity)
             assert _is_an_e_representation_((_ETAG_, x, y))
             return _ETAG_, x, y
-    except FpError:
+    except fp_Error:
         pass
-    raise EError
+    raise e_Error
 
 def e_to_octetstring(P, compressed=False):
     assert _is_an_e_representation_(P)
