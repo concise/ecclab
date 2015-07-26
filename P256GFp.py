@@ -11,7 +11,7 @@
 # GFp_parity_of(m)      m & 1
 # GFp_Error             can be thrown by GFp_from_bytes, GFp_inv, GFp_sqrt
 
-from P256 import p
+from p256 import p
 
 _TAG_ = 'GFp'
 

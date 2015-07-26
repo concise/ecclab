@@ -200,7 +200,7 @@ exception TypeError will be raised.
 '''
 
 import asn1
-from P256 import q
+from p256 import q
 from P256ECC import (
         E, E_from_bytes, E_to_bytes, E_contains, E_take_x_mod_q, E_eq, E_neg,
         E_dbl, E_add, E_mul, E_InputError)
