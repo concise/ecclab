@@ -249,3 +249,43 @@ def _rfc6979_bits2int(octetstr):
     qlen = 256
     x = _octets2int(octetstr)
     return (x >> (blen-qlen)) if (blen > qlen) else x
+
+'''
+
+[RFC5280]       Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
+                Housley, R., and W. Polk, "Internet X.509 Public Key
+                Infrastructure Certificate and Certificate Revocation
+                List (CRL) Profile", RFC 5280, May 2008.
+
+                4.1.    Basic Certificate Fields
+
+[RFC5480]       Turner, S., Brown, D., Yiu, K., Housley, R., and T. Polk,
+                "Elliptic Curve Cryptography Subject Public Key Information",
+                RFC 5480, March 2009.
+
+                2.2.    Subject Public Key
+
+[SEC1]          Standards for Efficient Cryptography Group (SECG), "SEC 1:
+                Elliptic Curve Cryptography", Version 2.0, May 2009.
+
+                2.3.1   Bit-String-to-Octet-String Conversion
+                2.3.4   Octet-String-to-Elliptic-Curve-Point Conversion
+                3.2.2   Validation of Elliptic Curve Public Keys
+                3.2.3   Partial Validation of Elliptic Curve Public Keys
+                C.3     Syntax for Elliptic Curve Public Keys
+
+[SEC2]          Standards for Efficient Cryptography Group (SECG), "SEC 2:
+                Recommended Elliptic Curve Domain Parameters", Version 2.0,
+                January 2010.
+
+                2.1     Properties of Elliptic Curve Domain Parameters over Fp
+                2.4.2   Recommended Parameters secp256r1
+
+                "secp256r1" means:
+
+                sec     standards for efficient cryptography
+                p256    curve over a prime field Fp; bit length of p is 256
+                r       verifiably random parameters (non-Koblitz)
+                1       the sequence number
+
+'''
