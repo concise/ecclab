@@ -284,4 +284,9 @@ def e_add(P, Q):
 def e_mul(P, k):
     assert _is_an_e_representation_(P)
     assert _is_an_fq_representation_(k)
-    # TODO
+    R = _Z_
+    for bit in fq_to_msb_first_bit_sequence(k):
+        R = e_dbl(R)
+        if bit == 1:
+            R = e_add(R, P)
+    return R
