@@ -8,7 +8,9 @@ the same curve:
     - prime256v1 (ANSI X9.62)
     - P-256 (NIST)
 
-Note that "secp256r1" means:
+
+
+The string "secp256r1" means:
 
         sec     standards for efficient cryptography
         p256    elliptic curve over a prime field Fp; bit length of p is 256
@@ -25,11 +27,15 @@ Note that "secp256r1" means:
 
                 4.1.    Basic Certificate Fields
 
+
+
 [RFC5480]       Turner, S., Brown, D., Yiu, K., Housley, R., and T. Polk,
                 "Elliptic Curve Cryptography Subject Public Key Information",
                 RFC 5480, March 2009. https://tools.ietf.org/html/rfc5480
 
                 2.2.    Subject Public Key
+
+
 
 [SEC1]          Standards for Efficient Cryptography Group (SECG), "SEC 1:
                 Elliptic Curve Cryptography", Version 2.0, May 2009.
@@ -41,6 +47,8 @@ Note that "secp256r1" means:
                 3.2.3   Partial Validation of Elliptic Curve Public Keys
                 C.3     Syntax for Elliptic Curve Public Keys
                 C.5     Syntax for Signature and Key Establishment Schemes
+
+
 
 [SEC2]          Standards for Efficient Cryptography Group (SECG), "SEC 2:
                 Recommended Elliptic Curve Domain Parameters", Version 2.0,
