@@ -230,6 +230,11 @@ def e_from_octetstring(octetstring):
         pass
     raise e_Error
 
+def e_nonzero_from_octetstring(octetstring):
+    if len(octetstring) == 1 and octetstring[0] == 0x00:
+        raise e_Error
+    return e_from_octetstring(octetstring)
+
 def e_to_octetstring(P, compressed=False):
     assert _is_an_e_representation_(P)
     _, x, y = P
@@ -316,29 +321,31 @@ def e_mul(P, k):
 
 
 
+class asn1_Error(BaseException):
+    pass
+
+def _asn1_parse_a_sequence_of_two_signed_integers_(octetstring):
+    pass # TODO
+
+
+
+
+
+
+
+
+
+
 __q__ = q
 
 class ecdsa_Error(BaseException):
     pass
 
-def ecdsa_verify_signature(publickey, message, signature):
-    assert type(publickey) is bytes
-    assert type(message) is bytes
-    assert type(signature) is bytes
-    try:
-        Q = e_from_octetstring(publickey)
-        if not e_eq(Q, e(0)):
-            h = ... # TODO
-            r, s = ... # TODO
-            return ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s)
-    except e_Error:
-        pass
-    raise ecdsa_Error
+def _sigbaseoctets_to_h_(octetstring):
+    # h <- mod_q(bitstring_to_integer(truncate_to_q_length(hash( msg ))))
+    pass # TODO
 
 def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
-    # Q <- e_from_octetstring( key )    MUST NOT BE THE POINT AT INFINITY
-    # h <- mod_q(bitstring_to_integer(truncate_to_q_length(hash( msg ))))
-    # (r, s) <- asn1_parse_a_sequence_of_two_signed_integer( sig )
     assert _is_an_e_representation_(Q) and not e_eq(Q, e(0))
     assert type(h) is int and (0 <= h <= __q__ - 1)
     assert type(r) is int
@@ -351,3 +358,27 @@ def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
               e_mul(Q,    fq_div(fq(r), fq(s))))
     rr = e_to_integer(R) % __q__
     return rr == r
+
+def ecdsa_verify_signature(publickey, message, signature):
+    assert type(publickey) is bytes
+    assert type(message) is bytes
+    assert type(signature) is bytes
+    try:
+        Q    = e_nonzero_from_octetstring(publickey)
+        h    = _sigbaseoctets_to_h_(message)
+        r, s = _asn1_parse_a_sequence_of_two_signed_integers_(signature)
+        return ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s)
+    except e_Error:
+        pass
+    except asn1_Error:
+        pass
+    raise ecdsa_Error
+
+def ecdsa_compress_publickey(publickey):
+    pass # TODO
+
+def ecdsa_decompress_publickey(publickey):
+    pass # TODO
+
+def ecdsa_extract_publickey_octetstring_from_certificate(certificate):
+    pass # TODO
