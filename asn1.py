@@ -1,128 +1,111 @@
-NOT_A_PYTHON_BYTES = 'not a Python bytes object'
-NOT_AN_ASN1_ENCODED = 'not an ASN.1 encoded result'
-BAD_ASN1_OR_TOO_LONG = ('the ASN.1 encoded object has a value longer than '
-                        '16 MiB or is corrupted')
+def parse_one_SEQUENCE(stream):
+    T, L, V, X = extract_T_L_V_X_from(stream)
+    assert value_of_L(L) == len(V)
+    if len(X) != 0:
+        raise ValueError
+    if T != b'\x30':
+        raise ValueError
 
-def asn1_parse_sequence(stream):
-    t, l, v = _asn1_parse_tlv(stream)
-    if t != 0x30:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-    # TODO repeatedly parse the substream `v` until the end
-    raise NotImplementedError
+    items = ()
+    X = V
+    while len(X) != 0:
+        T, L, V, X = extract_T_L_V_X_from(X)
+        items += (T + L + V,)
+    return items
 
-def asn1_parse_integer(stream):
-    t, l, v = _asn1_parse_tlv(stream)
-    if t != 0x02:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-    if l == 0:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-    if l >= 2 and v[0] == 0x00 and v[1] == 0x00:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-    intval = int.from_bytes(v, byteorder='big', signed=True)
-    return intval
+def parse_one_INTEGER(stream):
+    T, L, V, X = extract_T_L_V_X_from(stream)
+    assert value_of_L(L) == len(V)
+    if len(X) != 0:
+        raise ValueError
+    if T != b'\x02':
+        raise ValueError
+    if L >= 2 and V[0] == 0x00 and V[1] <= 0x7f:
+        raise ValueError
+    return int.from_bytes(V, byteorder='big', signed=True)
 
-def _length_of_asn1_length_field(l):
-    if type(l) is not int:
-        assert False
-    elif 0 <= l < 0x80:
-        return 1
-    elif l < 0x0100:
-        return 2
-    elif l < 0x010000:
-        return 3
-    elif l < 0x01000000:
-        return 4
-    else:
-        assert False
+def parse_one_BITSTRING_to_an_octet_string(stream):
+    T, L, V, X = extract_T_L_V_X_from(stream)
+    assert value_of_L(L) == len(V)
+    if len(X) != 0:
+        raise ValueError
+    if T != b'\x03':
+        raise ValueError
+    if V[0] != 0x00:
+        raise ValueError
+    return V[1:]
 
-def _asn1_parse_tlv(tlv):
-    t, l, v, x = _asn1_parse_tlvx(tlv)
-    if len(x) != 0:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-    else:
-        assert type(t) is int and 0 <= t <= 255
-        assert type(l) is int and l >= 0
-        assert type(v) is bytes and len(v) == l
-        assert len(tlv) == 1 + _length_of_asn1_length_field(l) + l
-        return t, l, v
+# ----------------------------------------------------------------------------
 
-def _asn1_parse_tlvx(tlvx):
-    if type(tlvx) is not bytes:
-        raise TypeError(NOT_A_PYTHON_BYTES)
-    if len(tlvx) < 2:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-    if tlvx[1] == 128:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-    t = tlvx[0]
-    lvx = tlvx[1:]
-    if lvx[0] <= 127:
-        l, v, x = _asn1_parse_lvx_with_short_l(lvx)
-    else:
-        l, v, x = _asn1_parse_lvx_with_long_l(lvx)
-    return t, l, v, x
+def extract_T_L_V_X_from(stream):
+    X = stream
+    T, X = extract_T_from(X)
+    L, X = extract_L_from(X)
+    V, X = extract_V_from(X, length=value_of_L(L))
+    return T, L, V, X
 
-def _asn1_parse_lvx_with_short_l(lvx):
-    assert type(lvx) is bytes
-    assert lvx[0] <= 127
-    l = lvx[0]
-    vx = lvx[1:]
-    if len(vx) >= l:
-        v, x = vx[:l], vx[l:]
-        return l, v, x
-    else:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-
-def _asn1_parse_lvx_with_long_l(lvx):
-    assert type(lvx) is bytes
-    assert lvx[0] >= 129
-    if lvx[0] - 0x80 == 1:
-        return _asn1_parse_lvx_with_2_l_octets(lvx)
-    elif lvx[0] - 0x80 == 2:
-        return _asn1_parse_lvx_with_3_l_octets(lvx)
-    elif lvx[0] - 0x80 == 3:
-        return _asn1_parse_lvx_with_4_l_octets(lvx)
-    else:
-        #
-        # A shortest valid ASN.1 L-V octet string in this case will be:
-        #
-        # +------+------+------+------+------+-------------------------+
-        # | 0x84 | 0x01 | 0x00 | 0x00 | 0x00 | ??????????????????????? |
-        # +------+------+------+------+------+-------------------------+
-        #                                         0x01000000 octets
-        if len(lvx) < 5 + 0x01000000:
-            raise ValueError(NOT_AN_ASN1_ENCODED)
+def extract_T_from(stream):
+    if type(stream) is bytes:
+        if len(stream) >= 1:
+            T, _ = stream[:1], stream[1:]
+            return T, _
         else:
-            raise ValueError(BAD_ASN1_OR_TOO_LONG)
-
-def _asn1_parse_lvx_with_2_l_octets(lvx):
-    assert type(lvx) is bytes
-    assert lvx[0] - 0x80 == 1
-    l = int.from_bytes(lvx[1:2], byteorder='big')
-    vx = lvx[2:]
-    if 0x80 <= l <= 0xff and len(vx) >= l:
-        v, x = vx[:l], vx[l:]
-        return l, v, x
+            raise ValueError
     else:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
+        raise TypeError
 
-def _asn1_parse_lvx_with_3_l_octets(lvx):
-    assert type(lvx) is bytes
-    assert lvx[0] - 0x80 == 2
-    l = int.from_bytes(lvx[1:3], byteorder='big')
-    vx = lvx[3:]
-    if 0x0100 <= l <= 0xffff and len(vx) >= l:
-        v, x = vx[:l], vx[l:]
-        return l, v, x
+def extract_L_from(stream):
+    if type(stream) is bytes:
+        if len(stream) >= 1:
+            leading_octet_value = stream[0]
+            if leading_octet_value <= 0x7f:
+                L, _ = stream[:1], stream[1:]
+                return L, _
+            elif leading_octet_value == 0x80:
+                raise ValueError
+            else:
+                return extract_long_L_from(stream)
+        else:
+            raise ValueError
     else:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
+        raise TypeError
 
-def _asn1_parse_lvx_with_4_l_octets(lvx):
-    assert type(lvx) is bytes
-    assert lvx[0] - 0x80 == 3
-    l = int.from_bytes(lvx[1:4], byteorder='big')
-    vx = lvx[4:]
-    if 0x010000 <= l <= 0xffffff and len(vx) == l:
-        v, x = vx[:l], vx[l:]
-        return l, v, x
+def extract_V_from(stream, length):
+    if type(stream) is bytes:
+        if len(stream) >= length:
+            V, _ = stream[:length], stream[length:]
+            return V, _
+        else:
+            raise TypeError
     else:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
+        raise TypeError
+
+def value_of_L(L):
+    if type(L) is not bytes:
+        raise TypeError
+    if len(L) == 0:
+        raise ValueError
+    if L[0] <= 0x7f and len(L) == 1:
+        return L[0]
+    elif L[0] == 0x81 and len(L) == 2 and L[1] >= 0x80:
+        return L[1]
+    elif L[0] >= 0x82 and len(L) == L[0] - 0x7f and L[1] != 0x00:
+        return int.from_bytes(L[1:], byteorder='big', signed=False)
+    else:
+        raise ValueError
+
+# ----------------------------------------------------------------------------
+
+def extract_long_L_from(stream):
+    assert type(stream) is bytes
+    assert len(stream) >= 1
+    assert stream[0] >= 0x81
+    length_of_L = stream[0] - 0x7f
+    if len(stream) < length_of_L:
+        raise ValueError
+    L, _ = stream[:length_of_L], stream[length_of_L:]
+    if (length_of_L == 2 and L[1] >= 0x80) or L[1] >= 0x00:
+        value_of_L(L) # MUST NOT raise any exception here
+        return L, _
+    else:
+        raise ValueError

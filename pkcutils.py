@@ -351,6 +351,22 @@ def _rfc6979_bits2int(octetstr):
     x = _octets2int(octetstr)
     return (x >> (blen-qlen)) if (blen > qlen) else x
 
+def extract_publickey_from_certificate(x509v3cert):
+    import asn1
+    try:
+        tbscert, *_                     = asn1.parse_one_SEQUENCE(cert)
+        _, _, _, _, _, _, pkinfo, *_    = asn1.parse_one_SEQUENCE(tbscert)
+        alg, pkbits                     = asn1.parse_one_SEQUENCE(pkinfo)
+        pk              = asn1.parse_one_BITSTRING_to_an_octet_string(pkbits)
+    except (ValueError, E_InputError) as e:
+        print('the provided octet string is not a valid X.509 version 3 '
+              'certificate with a secp256r1 elliptic curve subject public key')
+    else:
+        if alg != bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
+            raise ValueError
+        Q = E_from_bytes(pk)
+        return pk
+
 '''
 
 [RFC5280]       Cooper, D., Santesson, S., Farrell, S., Boeyen, S.,
