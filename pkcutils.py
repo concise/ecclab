@@ -23,30 +23,100 @@ Public-Key Cryptography Utilities
         nested structures as defined by X.509 v3, including a well-formed
         value of type PublicKey.
 
+        SubjectPublicKeyInfo  ::=  SEQUENCE  {
+                algorithm           AlgorithmIdentifier,
+                subjectPublicKey    BIT STRING  }
+
+        AlgorithmIdentifier  ::=  SEQUENCE  {
+                algorithm           OBJECT IDENTIFIER,
+                parameters          ANY DEFINED BY algorithm OPTIONAL }
+
         The subjectPublicKeyInfo field in a TBSCertificate should be in one of
         the following three formats:
 
                         AlgorithmIdentifier                   BIT STRING
-                             algorithm                     subjectPublicKey
         ------------------------------------------------- -------------------
         30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 42 00 04 {X} {Y}
         30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 22 00 02 {X}
         30 13 06 07 2a8648ce3d0201 06 08 2a8648ce3d030107 03 22 00 03 {X}
               ^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^
                 OBJECT IDENTIFIER     OBJECT IDENTIFIER
-                 id-ecPublicKey          prime256v1
+                 id-ecPublicKey          secp256r1
                 1.2.840.10045.2.1    1.2.840.10045.3.1.7
 
 
+        Simplified procedure to extract a public key from the certificate:
 
-    PublicKey :: OctetString  (X9.62 prime256v1 public keys)
+                [tbsCertificate, ...] = certificate
+
+                [version, serialNumber, signature, issuer, validity, subject,
+                        subjectPublicKeyInfo, ...] = tbsCertificate
+
+                [algorithm, subjectPublicKey] = subjectPublicKeyInfo
+
+                id_ecPublicKey_secp256r1 = AlgorithmIdentifier(
+                        301306072a8648ce3d020106082a8648ce3d030107)
+
+                REQUIRE: algorithm is equal to id_ecPublicKey_secp256r1
+
+                REQUIRE: subjectPublicKey is a BIT STRING with no padding bit
+
+                pk_candidate = bit_string_to_octet_string(subjectPublicKey)
+
+                REQUIRE: pk_candidate is an EC public key point of secp256r1
+
+                output pk_candidate
+
+        Simplified procedure to extract a public key from the certificate #2:
+
+                pattern = 301306072a8648ce3d020106082a8648ce3d030107
+
+                REQUIRE: at least one pattern occurrence in certificate
+
+                candidates = []
+
+                forEach occurrence of pattern in certificate:
+
+                        tail = the octet string right after the occurrence
+
+                        if the first four bytes are 03420004:
+
+                                c = {0x04} + the next 64 bytes
+
+                                if c is checked to be a valid EC point:
+
+                                        candidates.append(c)
+
+                        elif the first four bytes are 03220002 or 03220003:
+
+                                c = {0x02 OR 0x03} + the next 32 bytes
+
+                                if c is checked to be a valid EC point:
+
+                                        candidates.append(c)
+
+                ERROR if len(candidates) == 0
+
+                ERROR if len(candidates) >= 2 SHOULD RARELY HAPPEN UNLESS...
+
+                output candidates[0]
+
+                ERROR message:
+
+                        the provided octet string is not a valid X.509 version
+                        3 certificate with a secp256r1 elliptic curve subject
+                        public key
+
+
+
+    PublicKey :: OctetString  (secp256r1 public keys)
 
         A well-formed value of type PublicKey can be converted into an element
-        of the elliptic curve group prime256v1 using the rules defined in
-        X9.62, and the result MUST NOT be the point at infinity.  The octet
-        string is either in the "uncompressed" or in the "compressed" form,
-        and its length should be either 33 == (1 + 32) or 65 == (1 + 32 + 32),
-        and its first octet MUST.
+        of the elliptic curve group secp256r1 using the rules defined in SEC1,
+        and the result MUST NOT be the point at infinity.  The octet string is
+        either in the "uncompressed" or in the "compressed" form, and its
+        length should be either 33 == (1 + 32) or 65 == (1 + 32 + 32), and its
+        first octet MUST.
 
         +------+--------------------------+--------------------------+
         | 0x04 | an octet string X for xQ | an octet string Y for yQ |
@@ -64,7 +134,7 @@ Public-Key Cryptography Utilities
 
 
 
-    Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
+    Signature :: OctetString  (secp256r1 ecdsa-with-SHA256 signatures)
 
         A well-formed value of type Signature is an ASN.1 sequence of two
         integers r and s, where both of them MUST be a positive integer less
