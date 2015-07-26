@@ -78,7 +78,7 @@ def _asn1_parse_sequence(octetstring_bytes):
     items = ()
     X = V
     while len(X) != 0:
-        T, L, V, X = extract_T_L_V_X_from(X)
+        T, L, V, X = _asn1_extract_T_L_V_X_from(X)
         items += (T + L + V,)
     return items
 

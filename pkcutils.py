@@ -214,10 +214,10 @@ def ensure_good_subject_public_key(pk):
 
 def extract_publickey_from_certificate(x509v3cert):
     try:
-        tbscert, *_                     = asn1.parse_one_SEQUENCE(x509v3cert)
-        _, _, _, _, _, _, pkinfo, *_    = asn1.parse_one_SEQUENCE(tbscert)
-        alg, pkbits                     = asn1.parse_one_SEQUENCE(pkinfo)
-        publickey = asn1.parse_one_BITSTRING_to_an_octet_string(pkbits)
+        tbscert, *_                     = asn1.asn1_parse_sequence(x509v3cert)
+        _, _, _, _, _, _, pkinfo, *_    = asn1.asn1_parse_sequence(tbscert)
+        alg, pkbits                     = asn1.asn1_parse_sequence(pkinfo)
+        publickey = asn1.asn1_parse_bitstring(pkbits)
         ensure_good_subject_public_key_algorithm(alg)
         ensure_good_subject_public_key(publickey)
         return publickey
