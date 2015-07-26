@@ -113,7 +113,7 @@ def fp_parity_of(elm):
 
 
 _q_     = q
-_FqTAG_ = 'Fp'
+_FqTAG_ = 'Fq'
 
 class FqError(BaseException):
     pass
