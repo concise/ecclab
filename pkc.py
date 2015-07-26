@@ -1,13 +1,13 @@
 class PkcError(BaseException):
     pass
 
-class PkcTypeError(TypeError, PkcError):
+class PkcTypeError(PkcError, TypeError):
     pass
 
-class PkcCertificateError(ValueError, PkcError):
+class PkcCertificateError(PkcError, ValueError):
     pass
 
-class PkcPublickeyError(ValueError, PkcError):
+class PkcPublickeyError(PkcError, ValueError):
     pass
 
 def pkc_extract_publickey_from_certificate(certificate):

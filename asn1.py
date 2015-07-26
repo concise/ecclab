@@ -1,22 +1,13 @@
 class Asn1Error(BaseException):
     pass
 
-class Asn1NotImplementedError(NotImplementedError, Asn1Error):
+class Asn1NotImplementedError(Asn1Error, NotImplementedError):
     pass
 
-class Asn1TypeError(TypeError, Asn1Error):
+class Asn1TypeError(Asn1Error, TypeError):
     pass
 
-class Asn1ValueError(ValueError, Asn1Error):
-    pass
-
-class Asn1IntegerError(Asn1ValueError):
-    pass
-
-class Asn1BitStringError(Asn1ValueError):
-    pass
-
-class Asn1SequenceError(Asn1ValueError):
+class Asn1ValueError(Asn1Error, ValueError):
     pass
 
 def asn1_parse_integer(octetstring):

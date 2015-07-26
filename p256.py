@@ -1,10 +1,25 @@
 class P256Error(BaseException):
     pass
 
-class P256TypeError(TypeError, P256Error):
+class P256TypeError(P256Error, TypeError):
     pass
 
-class P256ValueError(ValueError, P256Error):
+class P256ValueError(P256Error, ValueError):
+    pass
+
+class P256EncodedInputValueError(P256ValueError):
+    pass
+
+class P256ZeroDivisionValueError(P256ValueError):
+    pass
+
+class P256SquareRootNotExistsValueError(P256ValueError):
+    pass
+
+class P256PointNotOnCurveValueError(P256ValueError):
+    pass
+
+class P256UnexpectedPointAtInfinityValueError(P256ValueError):
     pass
 
 # The elliptic curve named secp256r1 (or prime256v1 or P-256) is defined by
