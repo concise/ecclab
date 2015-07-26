@@ -4,21 +4,14 @@ BAD_ASN1_OR_TOO_LONG = ('the ASN.1 encoded object has a value longer than '
                         '16 MiB or is corrupted')
 
 def asn1_parse_sequence(stream):
-    """
-    asn1_parse_sequence parses an octet string as an ASN.1 encoded T-L-V
-    triple just as what _asn1_parse_anything does, but the V will be replaced
-    with a tuple of bytes representing the ordered sequence in the provided
-    ASN.1 SEQUENCE value.
-    """
-    t, l, v = _asn1_parse_anything(stream)
+    t, l, v = _asn1_parse_tlv(stream)
     if t != 0x30:
         raise ValueError(NOT_AN_ASN1_ENCODED)
-
-    raise NotImplementedError
     # TODO repeatedly parse the substream `v` until the end
+    raise NotImplementedError
 
 def asn1_parse_integer(stream):
-    t, l, v = _asn1_parse_anything(stream)
+    t, l, v = _asn1_parse_tlv(stream)
     if t != 0x02:
         raise ValueError(NOT_AN_ASN1_ENCODED)
     if l == 0:
@@ -27,17 +20,6 @@ def asn1_parse_integer(stream):
         raise ValueError(NOT_AN_ASN1_ENCODED)
     intval = int.from_bytes(v, byteorder='big', signed=True)
     return intval
-
-def _asn1_parse_anything(tlv):
-    t, l, v, x = _asn1_parse_tlvx(tlv)
-    if len(x) != 0:
-        raise ValueError(NOT_AN_ASN1_ENCODED)
-    else:
-        assert type(t) is int and 0 <= t <= 255
-        assert type(l) is int and l >= 0
-        assert type(v) is bytes and len(v) == l
-        assert len(tlv) == 1 + _length_of_asn1_length_field(l) + l
-        return t, l, v
 
 def _length_of_asn1_length_field(l):
     if type(l) is not int:
@@ -53,15 +35,18 @@ def _length_of_asn1_length_field(l):
     else:
         assert False
 
-def _asn1_parse_tlvx(tlvx):
-    """
-    _asn1_parse_tlvx parses an octet string as an ASN.1 encoded T-L-V-X
-    triple.
+def _asn1_parse_tlv(tlv):
+    t, l, v, x = _asn1_parse_tlvx(tlv)
+    if len(x) != 0:
+        raise ValueError(NOT_AN_ASN1_ENCODED)
+    else:
+        assert type(t) is int and 0 <= t <= 255
+        assert type(l) is int and l >= 0
+        assert type(v) is bytes and len(v) == l
+        assert len(tlv) == 1 + _length_of_asn1_length_field(l) + l
+        return t, l, v
 
-    Input data type:    tlvx should be a bytes
-    Output data types:  a tuple of three objects T, L, and V, where both T and
-                        L is an int and both V and X is a bytes
-    """
+def _asn1_parse_tlvx(tlvx):
     if type(tlvx) is not bytes:
         raise TypeError(NOT_A_PYTHON_BYTES)
     if len(tlvx) < 2:
