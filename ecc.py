@@ -321,6 +321,20 @@ __q__ = q
 class ecdsa_Error(BaseException):
     pass
 
+def ecdsa_verify_signature(publickey, message, signature):
+    assert type(publickey) is bytes
+    assert type(message) is bytes
+    assert type(signature) is bytes
+    try:
+        Q = e_from_octetstring(publickey)
+        if not e_eq(Q, e(0)):
+            h = ... # TODO
+            r, s = ... # TODO
+            return ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s)
+    except e_Error:
+        pass
+    raise ecdsa_Error
+
 def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
     # Q <- e_from_octetstring( key )    MUST NOT BE THE POINT AT INFINITY
     # h <- mod_q(bitstring_to_integer(truncate_to_q_length(hash( msg ))))
