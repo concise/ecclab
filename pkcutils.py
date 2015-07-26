@@ -22,13 +22,30 @@
 #       nested structures as defined by X.509 v3, including a well-formed
 #       value of type PublicKey.
 #
+#       https://tools.ietf.org/html/rfc5280#section-4.1
+#
 #   PublicKey :: OctetString  (X9.62 prime256v1 public keys)
 #
 #       A well-formed value of type PublicKey can be converted into an element
 #       of the elliptic curve group prime256v1 using the rules defined in
-#       X9.62, and the result MUST NOT be the point at infinity.  The
-#       OctetString value is in the "uncompressed", "compressed", or "hybrid"
-#       form, and its length should be 33 == (1 + 32) or 65 == (1 + 32 + 32).
+#       X9.62, and the result MUST NOT be the point at infinity.  The octet
+#       string is either in the "uncompressed" or in the "compressed" form,
+#       and its length should be either 33 == (1 + 32) or 65 == (1 + 32 + 32),
+#       and its first octet MUST.
+#
+#       https://tools.ietf.org/html/rfc5480#section-2.2
+#
+#           +------+--------------------------+--------------------------+
+#           | 0x04 | an octet string X for xQ | an octet string Y for yQ |
+#           +------+--------------------------+--------------------------+
+#
+#           +------+--------------------------+
+#           | 0x03 | an octet string X for xQ |  yQ == 1  (mod 2)
+#           +------+--------------------------+
+#
+#           +------+--------------------------+
+#           | 0x02 | an octet string X for xQ |  yQ == 0  (mod 2)
+#           +------+--------------------------+
 #
 #   Signature :: OctetString  (X9.62 prime256v1 ecdsa-with-SHA256 signatures)
 #
@@ -52,8 +69,8 @@
 #       of eight, so it is actually an octet string) from the nested field
 #       tbsCertificate -> subjectPublicKeyInfo -> subjectPublicKey if such
 #       field exists and the value is a valid PublicKey.  If the provided
-#       X.509 certificate input is not well-formed, the X509CertError
-#       exception will be raised.
+#       X.509 certificate input is not well-formed, an X509CertError exception
+#       will be raised.
 #
 #   compress_publickey : PublicKey -> PublicKey
 #                        except PublicKeyError
@@ -61,14 +78,21 @@
 #       If the provided PublicKey is already in the compressed form, return it
 #       without any modification.  If the provided is in the uncompressed form
 #       or the hybrid form as specified in X9.62, the compressed equivalent is
-#       returned.  If the provided PublicKey is not in a correct format, the
+#       returned.  If the provided PublicKey is not in a correct format, a
 #       PublicKeyError exception will be raised.
+#
+#   decompress_publickey : PublicKey -> PublicKey
+#                          except PublicKeyError
+#
+#       Decompress the provided PublicKey if possible and return the result.
+#       If the provided PublicKey is not in a correct format, a PublicKeyError
+#       exception will be raised.
 #
 #   verify_signature : (PublicKey, Signature, Message) -> Boolean
 #                      except PublicKeyError
 #
 #       Check if the provided Signature is valid for the Message under the
-#       PublicKey.  The PublicKeyError exception is raised if and only if the
+#       PublicKey.  A PublicKeyError exception is raised if and only if the
 #       provided PublicKey is not in a correct format.
 #
 # If any value of the wrong type is passed into the above functions, a Python
