@@ -44,7 +44,7 @@ def _asn1_parse_integer(octetstring_bytes):
         raise Asn1ValueError
     if T != b'\x02':
         raise Asn1ValueError
-    if L >= 2 and V[0] == 0x00 and V[1] <= 0x7f:
+    if len(V) >= 2 and V[0] == 0x00 and V[1] <= 0x7f:
         raise Asn1ValueError
     return int.from_bytes(V, byteorder='big', signed=True)
 

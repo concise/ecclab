@@ -8,8 +8,13 @@ class P256ValueError(P256Error, ValueError):
     pass
 
 def p256_validate_ecdsa_Q_h_r_s_quadruple(Q, h, r, s):
+    if E_eq(Q, Z):
+        return False
     r2 = E_take_x_mod_q(E_add(E_mul(G, _div_(h, s)), E_mul(Q, _div_(r, s))))
     return (r - r2) % q == 0
+
+def _div_(a, b):
+    return (a * pow(b, q - 2, q)) % q
 
 
 
@@ -35,7 +40,7 @@ def GFp(m):
     return m % p
 
 def GFp_contains(val):
-    if type(m) is not int:
+    if type(val) is not int:
         raise P256TypeError
     return 0 <= val <= p-1
 
@@ -181,8 +186,7 @@ def E_take_x_mod_q(M):
         raise P256ValueError
     else:
         x, y = M
-        _, xval = x
-        return xval % q
+        return x % q
 
 def E_eq(M, N):
     if not E_contains(M) or not E_contains(N):
