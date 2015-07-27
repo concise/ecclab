@@ -512,13 +512,93 @@ def ecdsa_decompress_publickey(publickey):
 
 def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
     try:
-        tbscert, _, _                   = asn1_parse_sequence(certifi)
-        _, _, _, _, _, _, pk_info, *_   = asn1_parse_sequence(tbscert)
-        alg, pk_bits                    = asn1_parse_sequence(pk_info)
-        pk_octets      = asn1_parse_bitstring_as_octet_string(pk_bits)
+
+        #
+        # Certificate ::= SEQUENCE {
+        #   tbsCertificate          TBSCertificate,
+        #   signatureAlgorithm      AlgorithmIdentifier,
+        #   signatureValue          BIT STRING
+        # }
+        #
+        tbscert, _, _ = asn1_parse_sequence(certifi)
+
+        #
+        # TBSCertificate ::= SEQUENCE {
+        #   version             [0] EXPLICIT Version DEFAULT v1,
+        #   serialNumber            CertificateSerialNumber,
+        #   signature               AlgorithmIdentifier,
+        #   issuer                  Name,
+        #   validity                Validity,
+        #   subject                 Name,
+        #   subjectPublicKeyInfo    SubjectPublicKeyInfo,
+        #   issuerUniqueID      [1] IMPLICIT UniqueIdentifier OPTIONAL,
+        #                           -- If present, version MUST be v2 or v3
+        #   subjectUniqueID     [2] IMPLICIT UniqueIdentifier OPTIONAL,
+        #                           -- If present, version MUST be v2 or v3
+        #   extensions          [3] EXPLICIT Extensions OPTIONAL
+        #                           -- If present, version MUST be v3
+        # }
+        #
+        _, _, _, _, _, _, pk_info, *_ = asn1_parse_sequence(tbscert)
+
+        # SubjectPublicKeyInfo ::= SEQUENCE {
+        #   algorithm               AlgorithmIdentifier,
+        #   subjectPublicKey        BIT STRING
+        # }
+        alg, pk_bits = asn1_parse_sequence(pk_info)
+
+        #
+        # AlgorithmIdentifier ::= SEQUENCE {
+        #   algorithm               OBJECT IDENTIFIER,
+        #   parameters              ANY DEFINED BY algorithm OPTIONAL
+        # }
+        #
+        # From Section 2.1 of RFC5480:
+        #
+        #       The algorithm field in the SubjectPublicKeyInfo structure
+        #       indicates the algorithm and any associated parameters for the
+        #       ECC public key (see Section 2.2).
+        #
+        #       id-ecPublicKey indicates that the algorithms that can be used
+        #       with the subject public key are unrestricted.  The key is only
+        #       restricted by the values indicated in the key usage
+        #       certificate extension (see Section 3).  id-ecPublicKey MUST be
+        #       supported.  See Section 2.1.1.  This value is also included in
+        #       certificates when a public key is used with ECDSA.
+        #
+        # From Section 2.1.1 of RFC5480:
+        #
+        #       id-ecPublicKey OBJECT IDENTIFIER ::= {
+        #         iso(1) member-body(2) us(840) ansi-X9-62(10045)
+        #         keyType(2) 1
+        #       }
+        #
+        #       The parameter for id-ecPublicKey is as follows and MUST always
+        #       be present:
+        #
+        #       ECParameters ::= CHOICE {
+        #         namedCurve         OBJECT IDENTIFIER
+        #         -- implicitCurve   NULL
+        #         -- specifiedCurve  SpecifiedECDomain
+        #       }
+        #
+        # From Section 2.1.1.1 of RFC5480:
+        #
+        #       secp256r1 OBJECT IDENTIFIER ::= {
+        #         iso(1) member-body(2) us(840) ansi-X9-62(10045)
+        #         curves(3) prime(1) 7
+        #       }
+        #
         _ecdsa_ensure_good_ecdsa_algorithm_(alg)
+
+        #
+        # ECPoint ::= OCTET STRING
+        #
+        pk_octets = asn1_parse_bitstring_as_octet_string(pk_bits)
         _ecdsa_ensure_good_ecdsa_publickey_(pk_octets)
+
         return pk_octets
+
     except asn1_Error:
         pass
     except ValueError:
@@ -526,6 +606,16 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
     raise ecdsa_Error
 
 def _ecdsa_ensure_good_ecdsa_algorithm_(alg):
+    #
+    #                   AlgorithmIdentifier
+    #
+    # 30 13   06 07 2a8648ce3d0201   06 08 2a8648ce3d030107
+    #
+    #         ^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^
+    #           OBJECT IDENTIFIER       OBJECT IDENTIFIER
+    #            id-ecPublicKey             secp256r1
+    #           1.2.840.10045.2.1      1.2.840.10045.3.1.7
+    #
     if alg != bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
         raise ecdsa_Error
 
