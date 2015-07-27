@@ -13,4 +13,4 @@ try:
     else:
         print('the signature is invalid')
 except secp256r1.ecdsa_Error:
-    print('ERROR: The public key is incorrect')
+    print('ERROR: the provided public key is incorrect')
