@@ -38,3 +38,7 @@ def test_perform_signature_verification():
     except secp256r1.ecdsa_Error:
         print('ERROR: the input cannot be recognized as a valid secp256r1 public key EC point')
         print('----- test_perform_signature_verification() failed -----')
+
+if __name__ == '__main__':
+    test_get_pk_from_cert()
+    test_perform_signature_verification()
