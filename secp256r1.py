@@ -510,7 +510,7 @@ def ecdsa_decompress_publickey(publickey):
         pass
     raise ecdsa_Error
 
-def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
+def ecdsa_extract_publickey_octetstring_from_certificate(certificate):
     try:
 
         #
@@ -520,7 +520,7 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
         #   signatureValue          BIT STRING
         # }
         #
-        tbscert, _, _ = asn1_parse_sequence(certifi)
+        tbscert, _, _ = asn1_parse_sequence(certificate)
 
         #
         # TBSCertificate ::= SEQUENCE {
