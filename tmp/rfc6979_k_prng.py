@@ -1,4 +1,96 @@
 #!/usr/bin/env python3
+"""
+
+uint        "Unsigned Integer"  <--- int
+
+            An "Unsigned Integer" is represented as an object of the native
+            Python type "int" with a value always greater than or equal to 0.
+
+bits        "Bit Sequence"      <--- ('BitSequence', bytes, int)
+
+            A "Bit Sequence" is represented as an object of the native Python
+            type "tuple".  Such a tuple must have length equal to 3.  The
+            first element must be an object of the native Python type "str"
+            with string value "BitSequence".  The second element must be an
+            object of the native Python type "bytes" representing an octet
+            sequence.  The third element must be an object of the native
+            Python type "int" with an integer value 0, 1, 2, 3, 4, 5, 6, or 7.
+            The third element indicates the number of trailing padding bits in
+            the last octet in the second element.  If the second element is an
+            empty sequence, the third element must have value 0.
+
+octets      "Octet Sequence"    <--- ('BitSequence', bytes, 0)
+
+            An "Octet Sequence" is represented in the same way as a "Bit
+            Sequence", but the third element is always 0.
+
+"""
+
+def _is_uint(uint):
+    return type(uint) is int and uint >= 0
+
+def _is_bits(bits):
+    return (type(bits) is tuple
+            and type(bits[0]) is str and bits[0] == 'BitSequence'
+            and type(bits[1]) is bytes
+            and type(bits[2]) is int and bits[2] in {0,1,2,3,4,5,6,7}
+            and not (len(bits[1]) == 0 and bits[2] != 0))
+
+def _is_octets(octets):
+    return _is_bits(octets) and octets[2] == 0
+
+def bit_length_of_uint(uint):
+    assert _is_uint(uint)
+    return int.bit_length(uint)
+
+def bit_length_of_bits(bits):
+    assert _is_bits(bits)
+    _, octets, num_padding_bits = bits
+    return len(octets) * 8 - num_padding_bits
+
+def bit_length_of(uint_or_bits):
+    if _is_uint(uint_or_bits):
+        return bit_length_of_uint(uint_or_bits)
+    elif _is_bits(uint_or_bits):
+        return bit_length_of_bits(uint_or_bits)
+    else:
+        assert False
+
+def octet_length_of_(uint_or_bits):
+    z = bit_length_of(uint_or_bits)
+    return (z // 8) + (1 if (z % 8 > 0) else 0)
+
+def bits_to_uint(bits):
+    assert _is_bits(bits)
+    _, octets, num_padding_bits = bits
+    tmp = int.from_bytes(octets, byteorder='big', signed=False)
+    ret = tmp >> num_padding_bits
+    assert _is_uint(ret)
+    return ret
+
+def bits_to_uint_of_same_length_as_uint(b, q):
+    assert _is_bits(b)
+    assert _is_uint(q)
+    blen = bit_length_of(b)
+    qlen = bit_length_of(q)
+    c = bits_to_uint(b)
+    if blen > qlen:
+        return c >> (blen - qlen)
+    else:
+        return c
+
+def uint_to_octets_of_same_length_as_uint(uint, q):
+    assert _is_uint(uint)
+    assert _is_uint(q)
+    qlen = octet_length_of_(q)
+    octets = int.to_bytes(uint, length=qlen, byteorder='big', signed=False)
+    ret = 'BitSequence', octets, 0
+    assert _is_octets(ret)
+    return ret
+
+
+
+
 
 def rfc6979_k_prng(x, h, q, hLEN, HMAC):
     '''
