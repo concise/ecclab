@@ -332,8 +332,8 @@ def asn1_parse_integer(octetstring):
     return an signed integer encoded in this ASN.1 INTEGER
     """
     assert type(octetstring) is bytes
-    T, L, V, X = _asn1_extract_T_L_V_X_from(octetstring)
-    assert _asn1_L_value(L) == len(V)
+    T, L, V, X = _asn1_extract_T_L_V_X_from_(octetstring)
+    assert _asn1_L_value_(L) == len(V)
     if len(X) != 0:
         raise asn1_Error
     if T != b'\x02':
@@ -347,8 +347,8 @@ def asn1_parse_bitstring_as_octet_string(octetstring):
     return an octet string encoded in this ASN.1 BIT STRING
     """
     assert type(octetstring) is bytes
-    T, L, V, X = _asn1_extract_T_L_V_X_from(octetstring)
-    assert _asn1_L_value(L) == len(V)
+    T, L, V, X = _asn1_extract_T_L_V_X_from_(octetstring)
+    assert _asn1_L_value_(L) == len(V)
     if len(X) != 0:
         raise asn1_Error
     if T != b'\x03':
@@ -362,8 +362,8 @@ def asn1_parse_sequence(octetstring):
     return a sequence of octet strings encoded in this ASN.1 SEQUENCE
     """
     assert type(octetstring) is bytes
-    T, L, V, X = _asn1_extract_T_L_V_X_from(octetstring)
-    assert _asn1_L_value(L) == len(V)
+    T, L, V, X = _asn1_extract_T_L_V_X_from_(octetstring)
+    assert _asn1_L_value_(L) == len(V)
     if len(X) != 0:
         raise asn1_Error
     if T != b'\x30':
@@ -371,18 +371,18 @@ def asn1_parse_sequence(octetstring):
     items = ()
     X = V
     while len(X) != 0:
-        T, L, V, X = _asn1_extract_T_L_V_X_from(X)
+        T, L, V, X = _asn1_extract_T_L_V_X_from_(X)
         items += (T + L + V,)
     return items
 
-def _asn1_extract_T_L_V_X_from(stream):
+def _asn1_extract_T_L_V_X_from_(stream):
     X = stream
-    T, X = _asn1_extract_T_from(X)
-    L, X = _asn1_extract_L_from(X)
-    V, X = _asn1_extract_V_from(X, length=_asn1_L_value(L))
+    T, X = _asn1_extract_T_from_(X)
+    L, X = _asn1_extract_L_from_(X)
+    V, X = _asn1_extract_V_from_(X, length=_asn1_L_value_(L))
     return T, L, V, X
 
-def _asn1_L_value(L):
+def _asn1_L_value_(L):
     if len(L) == 0:
         raise asn1_Error
     elif len(L) == 1 and L[0] <= 0x7f:
@@ -394,12 +394,12 @@ def _asn1_L_value(L):
     else:
         raise asn1_Error
 
-def _asn1_extract_T_from(stream):
+def _asn1_extract_T_from_(stream):
     if len(stream) == 0:
         raise asn1_Error
     return stream[:1], stream[1:]
 
-def _asn1_extract_L_from(stream):
+def _asn1_extract_L_from_(stream):
     if len(stream) == 0:
         raise asn1_Error
     if stream[0] == 0x80:
@@ -407,9 +407,9 @@ def _asn1_extract_L_from(stream):
     elif stream[0] <= 0x7f:
         return stream[:1], stream[1:]
     else:
-        return _asn1_extract_long_L_from(stream)
+        return _asn1_extract_long_L_from_(stream)
 
-def _asn1_extract_long_L_from(stream):
+def _asn1_extract_long_L_from_(stream):
     length = stream[0] - 0x7f
     if len(stream) < length:
         raise asn1_Error
@@ -419,7 +419,7 @@ def _asn1_extract_long_L_from(stream):
     else:
         raise asn1_Error
 
-def _asn1_extract_V_from(stream, length):
+def _asn1_extract_V_from_(stream, length):
     if len(stream) < length:
         raise asn1_Error
     return stream[:length], stream[length:]
@@ -456,7 +456,7 @@ def _ecdsa_signature_base_octetstring_to_integer_mod_q_(octetstring):
     digest = sha256_digester.digest()
     return int.from_bytes(digest, byteorder='big', signed=False) % __q__
 
-def ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s):
+def _ecdsa_is_valid_Qhrs_quadruple_(Q, h, r, s):
     assert _is_an_e_representation_(Q) and not e_eq(Q, e(0))
     assert type(h) is int and (0 <= h <= __q__ - 1)
     assert type(r) is int
@@ -478,7 +478,7 @@ def ecdsa_verify_signature(publickey, message, signature):
         Q    = e_nonzero_from_octetstring(publickey)
         h    = _ecdsa_signature_base_octetstring_to_integer_mod_q_(message)
         r, s = _asn1_parse_a_sequence_of_two_signed_integers_(signature)
-        return ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s)
+        return _ecdsa_is_valid_Qhrs_quadruple_(Q, h, r, s)
     except e_Error:
         pass
     except asn1_Error:
@@ -509,8 +509,8 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
         _, _, _, _, _, _, pk_info, *_   = asn1_parse_sequence(tbscert)
         alg, pk_bits                    = asn1_parse_sequence(pk_info)
         pk_octets      = asn1_parse_bitstring_as_octet_string(pk_bits)
-        _ecdsa_ensure_good_ecdsa_algorithm(alg)
-        _ecdsa_ensure_good_ecdsa_publickey(pk_octets)
+        _ecdsa_ensure_good_ecdsa_algorithm_(alg)
+        _ecdsa_ensure_good_ecdsa_publickey_(pk_octets)
         return pk_octets
     except asn1_Error:
         pass
@@ -518,11 +518,11 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
         pass
     raise ecdsa_Error
 
-def _ecdsa_ensure_good_ecdsa_algorithm(alg):
+def _ecdsa_ensure_good_ecdsa_algorithm_(alg):
     if alg != bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
         raise ecdsa_Error
 
-def _ecdsa_ensure_good_ecdsa_publickey(pk_octets):
+def _ecdsa_ensure_good_ecdsa_publickey_(pk_octets):
     try:
         Q = e_nonzero_from_octetstring(pk_octets)
         return
