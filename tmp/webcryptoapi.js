@@ -107,3 +107,9 @@ var tryVerifyingAnEcdsaSignature = function () {
 // 36. PBKDF2
 // http://www.w3.org/TR/2014/CR-WebCryptoAPI-20141211/#pbkdf2
 //
+// https://datatracker.ietf.org/wg/jose/documents/
+// Javascript Object Signing and Encryption (JOSE)
+// JSON Web Key (JWK)
+// JSON Web Signature (JWS)
+// JSON Web Encryption (JWE)
+// JSON Web Algorithms (JWA)
