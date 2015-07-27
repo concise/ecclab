@@ -541,23 +541,25 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
         #
         _, _, _, _, _, _, pk_info, *_ = asn1_parse_sequence(tbscert)
 
+        #
         # SubjectPublicKeyInfo ::= SEQUENCE {
         #   algorithm               AlgorithmIdentifier,
         #   subjectPublicKey        BIT STRING
         # }
+        #
         alg, pk_bits = asn1_parse_sequence(pk_info)
 
-        #
-        # AlgorithmIdentifier ::= SEQUENCE {
-        #   algorithm               OBJECT IDENTIFIER,
-        #   parameters              ANY DEFINED BY algorithm OPTIONAL
-        # }
         #
         # From Section 2.1 of RFC5480:
         #
         #       The algorithm field in the SubjectPublicKeyInfo structure
         #       indicates the algorithm and any associated parameters for the
         #       ECC public key (see Section 2.2).
+        #
+        #       AlgorithmIdentifier ::= SEQUENCE {
+        #         algorithm               OBJECT IDENTIFIER,
+        #         parameters              ANY DEFINED BY algorithm OPTIONAL
+        #       }
         #
         #       id-ecPublicKey indicates that the algorithms that can be used
         #       with the subject public key are unrestricted.  The key is only
@@ -589,7 +591,7 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
         #         curves(3) prime(1) 7
         #       }
         #
-        _ecdsa_ensure_good_ecdsa_algorithm_(alg)
+        _ecdsa_ensure_good_subjectpublickeyinfo_algorithm_field_(alg)
 
         #
         # ECPoint ::= OCTET STRING
@@ -605,16 +607,17 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
         pass
     raise ecdsa_Error
 
-def _ecdsa_ensure_good_ecdsa_algorithm_(alg):
+def _ecdsa_ensure_good_subjectpublickeyinfo_algorithm_field_(alg):
     #
     #                   AlgorithmIdentifier
     #
     # 30 13   06 07 2a8648ce3d0201   06 08 2a8648ce3d030107
-    #
     #         ^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^^^^^^^
-    #           OBJECT IDENTIFIER       OBJECT IDENTIFIER
-    #            id-ecPublicKey             secp256r1
-    #           1.2.840.10045.2.1      1.2.840.10045.3.1.7
+    #         the algorithm field      the parameter field
+    #
+    #          OBJECT IDENTIFIER        OBJECT IDENTIFIER
+    #           id-ecPublicKey              secp256r1
+    #          1.2.840.10045.2.1       1.2.840.10045.3.1.7
     #
     if alg != bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
         raise ecdsa_Error
