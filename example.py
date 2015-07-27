@@ -20,7 +20,7 @@ try:
     print(bytes_tohex(pk_compressed))
     print()
 except secp256r1.ecdsa_Error:
-    print('ERROR: the provided certificate is in an incorrect format')
+    print('ERROR: the input is not a valid X.509 version 3 certificate with a secp256r1 public key')
 
 
 
@@ -35,4 +35,4 @@ try:
         print('The signature is invalid')
     print()
 except secp256r1.ecdsa_Error:
-    print('ERROR: the provided public key is in an incorrect format')
+    print('ERROR: the input cannot be recognized as a valid secp256r1 public key EC point')
