@@ -147,12 +147,15 @@ def fq_mul(elm1, elm2):
 def fq_div(elm1, elm2):
     return fq_mul(elm1, fq_inv(elm2))
 
-def fq_to_msb_first_bit_sequence(elm):
+def fq_to_lsb_first_bit_sequence_generator(elm):
     assert _is_an_fq_representation_(elm)
     _, value = elm
     vlen = value.bit_length()
-    for i in range(vlen - 1, -1, -1):
+    for i in range(vlen):
         yield (value >> i) & 1
+
+def fq_to_msb_first_bit_sequence(elm):
+    return reversed(tuple(fq_to_lsb_first_bit_sequence_generator(elm)))
 
 
 
@@ -176,27 +179,27 @@ _Z_    = _ETAG_, _xZ_, _yZ_
 class e_Error(BaseException):
     pass
 
-def _is_a_2d_fp_space_point_(obj):
-    return (type(obj) is tuple and len(obj) == 3 and obj[0] is _ETAG_
-            and _is_an_fp_representation_(obj[1])
-            and _is_an_fp_representation_(obj[2]))
-
-def _is_on_curve_(x, y):
+def _is_on_e_curve_(x, y):
     lhs = fp_square(y)
     rhs = fp_add(fp_add(fp_cube(x), fp_mul(_a_, x)), _b_)
     return fp_eq(lhs, rhs)
 
+def _is_a_2d_fp_space_point_for_e_(obj):
+    return (type(obj) is tuple and len(obj) == 3 and obj[0] is _ETAG_
+            and _is_an_fp_representation_(obj[1])
+            and _is_an_fp_representation_(obj[2]))
+
 def _is_an_e_representation_(obj):
-    if _is_a_2d_fp_space_point_(obj):
+    if _is_a_2d_fp_space_point_for_e_(obj):
         _, x, y = obj
-        if _is_on_curve_(x, y):
+        if _is_on_e_curve_(x, y):
             return True
         else:
             return obj == _Z_
     else:
         return False
 
-assert not _is_on_curve_(_xZ_, _yZ_)
+assert not _is_on_e_curve_(_xZ_, _yZ_)
 assert _is_an_e_representation_(_G_)
 assert _is_an_e_representation_(_Z_)
 
@@ -444,7 +447,7 @@ __q__ = q
 class ecdsa_Error(BaseException):
     pass
 
-def _sigbaseoctets_to_h_(octetstring):
+def _ecdsa_signature_base_octetstring_to_integer_mod_q_(octetstring):
     # h <- mod_q(bitstring_to_integer(truncate_to_q_length(hash( ... ))))
     assert type(octetstring) is bytes
     import hashlib
@@ -473,7 +476,7 @@ def ecdsa_verify_signature(publickey, message, signature):
     assert type(signature) is bytes
     try:
         Q    = e_nonzero_from_octetstring(publickey)
-        h    = _sigbaseoctets_to_h_(message)
+        h    = _ecdsa_signature_base_octetstring_to_integer_mod_q_(message)
         r, s = _asn1_parse_a_sequence_of_two_signed_integers_(signature)
         return ecdsa_is_valid_Qhrs_quadruple(Q, h, r, s)
     except e_Error:
@@ -506,8 +509,8 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
         _, _, _, _, _, _, pk_info, *_   = asn1_parse_sequence(tbscert)
         alg, pk_bits                    = asn1_parse_sequence(pk_info)
         pk_octets      = asn1_parse_bitstring_as_octet_string(pk_bits)
-        _ensure_good_ecdsa_algorithm(alg)
-        _ensure_good_ecdsa_publickey(pk_octets)
+        _ecdsa_ensure_good_ecdsa_algorithm(alg)
+        _ecdsa_ensure_good_ecdsa_publickey(pk_octets)
         return pk_octets
     except asn1_Error:
         pass
@@ -515,11 +518,11 @@ def ecdsa_extract_publickey_octetstring_from_certificate(certifi):
         pass
     raise ecdsa_Error
 
-def _ensure_good_ecdsa_algorithm(alg):
+def _ecdsa_ensure_good_ecdsa_algorithm(alg):
     if alg != bytes.fromhex('301306072a8648ce3d020106082a8648ce3d030107'):
         raise ecdsa_Error
 
-def _ensure_good_ecdsa_publickey(pk_octets):
+def _ecdsa_ensure_good_ecdsa_publickey(pk_octets):
     try:
         Q = e_nonzero_from_octetstring(pk_octets)
         return
