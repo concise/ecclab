@@ -1,4 +1,5 @@
-ECDSA signature verification functions for secp256r1 curve in Python.
+ECDSA signature verification function and X.509 certificate public key parsing
+for secp256r1 curve completely in Python without any external dependencies.
 
 
 
