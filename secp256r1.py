@@ -629,3 +629,159 @@ def _ecdsa_ensure_good_ecdsa_publickey_(pk_octets):
     except e_Error:
         pass
     raise ecdsa_Error
+
+
+
+
+
+
+
+
+
+
+def fq_add(elm1, elm2):
+    assert _is_an_fq_representation_(elm1)
+    assert _is_an_fq_representation_(elm2)
+    return _FqTAG_, (elm1[1] + elm2[1]) % _q_
+
+def _rfc6979_prng(x, h):
+
+    def hmac_sha256(hmac_key, hmac_msg):
+        import hashlib
+        import hmac
+        hmac_signer = hmac.new(hmac_key, digestmod=hashlib.sha256)
+        hmac_signer.update(hmac_msg)
+        return hmac_signer.digest()
+
+    yield from __rfc6979_prng__(
+        x, h, q=_q_, hLEN=32, HMAC=hmac_sha256)
+
+def __rfc6979_prng__(x, h, q, hLEN, HMAC):
+    '''
+    generate pseudo-random integers in the inclusive range [1, q - 1]
+    '''
+    assert type(x) is int and 1 <= x <= q - 1   # private key
+    assert type(h) is int and 0 <= h <= q - 1   # message hashed into Fq
+    assert type(q) is int                       # group order
+    assert type(hLEN) is int                    # H output byte-length
+    assert type(HMAC(b'', b'')) is bytes        # HMAC function
+    assert len(HMAC(b'', b'')) == hLEN          # HMAC output byte-length
+
+    def bitlen(obj):
+        assert (type(obj) is int and obj > 0) or type(obj) is bytes
+        if type(obj) is int:
+            return obj.bit_length()
+        else:
+            return len(obj) * 8
+
+    def bytelen(obj):
+        z = bitlen(obj)
+        return (z // 8) + (1 if (z % 8 > 0) else 0)
+
+    def int2octets(x, q):
+        qLEN = bytelen(q)
+        return x.to_bytes(length=qLEN, byteorder='big')
+
+    def octets2int(z):
+        return int.from_bytes(z, byteorder='big')
+
+    def bits2int(b, q):
+        blen = bitlen(b)
+        qlen = bitlen(q)
+        x = octets2int(b)
+        return (x >> (blen-qlen)) if (blen > qlen) else x
+
+    V = b'\x01' * hLEN
+    K = b'\x00' * hLEN
+    K = HMAC(K, V + b'\x00' + int2octets(x, q) + int2octets(h, q))
+    V = HMAC(K, V)
+    K = HMAC(K, V + b'\x01' + int2octets(x, q) + int2octets(h, q))
+    V = HMAC(K, V)
+
+    while True:
+        T = b''
+        while bitlen(T) < bitlen(q):
+            V = HMAC(K, V)
+            T = T + V
+        k = bits2int(T, q)
+        if 1 <= k <= q - 1:
+            yield k
+        K = HMAC(K, V + b'\x00')
+        V = HMAC(K, V)
+
+def _signed_integer_byte_length_(n):
+    assert type(n) is int
+    if n >= 0:
+        pybitlen = n.bit_length()
+        return 1 + (pybitlen // 8)
+    else:
+        return _signed_integer_byte_length_(-n - 1)
+
+def _asn1_encode_length_(n):
+    def bytelen(obj):
+        z = bitlen(obj)
+        return (z // 8) + (1 if (z % 8 > 0) else 0)
+    assert type(n) is int and n >= 0
+    if n == 0:
+        return b'\x00'
+    elif n <= 127:
+        return n.to_bytes(length=1, byteorder='big', signed=False)
+    else:
+        encoded = n.to_bytes(
+            length=bytelen(n),
+            byteorder='big',
+            signed=False)
+        print(encoded)
+        return bytes([0x80 + len(n)]) + encoded
+        # TODO review if this is correct
+
+def _asn1_encode_a_signed_integer_(n):
+    assert type(n) is int
+    if n == 0:
+        return bytes([0x02, 0x01, 0x00])
+    else:
+        l = _signed_integer_byte_length_(n)
+        x = n.to_bytes(length=l, byteorder='big', signed=True)
+        length = len(x)
+        return b'\x02' + _asn1_encode_length_(length) + x
+
+
+def _asn1_encode_a_sequence_of_two_signed_integers_(r, s):
+    assert type(r) is int
+    assert type(s) is int
+    rr = _asn1_encode_a_signed_integer_(r)
+    ss = _asn1_encode_a_signed_integer_(s)
+    length = len(rr + ss)
+    return b'\x30' + _asn1_encode_length_(length) + rr + ss
+
+def ecdsa_secretkey_to_publickey(secretkey):
+    try:
+        x = int.from_bytes(secretkey, byteorder='big', signed=False)
+        assert 1 <= x <= q - 1
+        Q = e_mul(e(1), fq(x))
+        return e_to_octetstring(Q)
+    except:
+        pass
+    raise ecdsa_Error
+
+def ecdsa_generate_signature(secretkey, message):
+    try:
+        x = int.from_bytes(secretkey, byteorder='big', signed=False)
+        h = _ecdsa_signature_base_octetstring_to_integer_mod_q_(message)
+        for k in _rfc6979_prng(x, h):
+            R = e_mul(e(1), fq(k))
+            r = e_to_integer(R) % __q__
+            if r == 0:
+                continue
+            s = fq_to_integer(fq_div(fq_add(fq(h), fq_mul(fq(r), fq(x))), fq(k)))
+            if s == 0:
+                continue
+            return _asn1_encode_a_sequence_of_two_signed_integers_(r, s)
+    except:
+        pass
+    raise ecdsa_Error
+
+#if __name__ == '__main__':
+#    def B2H(i): import codecs; return codecs.encode(i, 'hex').decode();
+#    print(B2H(ecdsa_secretkey_to_publickey(bytes.fromhex('C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721'))))
+#    print(B2H(ecdsa_generate_signature(bytes.fromhex('C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721'), b'sample')))
