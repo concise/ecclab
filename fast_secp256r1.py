@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-#
-# q                     the order of the elliptic curve group
-# (0, 0)                the point at infinity
-# (xG, yG)              the base point
-# add(x1, y1, x2, y2)   compute (x3, y3) = (x1, y1) + (x2, y2)
-# mul(x, y, k)          compute (x4, y4) = [k](x, y)
-#
+"""
 
+  q                     the order of the elliptic curve group
+  (xZ, yZ)              the point at infinity
+  (xG, yG)              the base point
+  add(x1, y1, x2, y2)   compute (x3, y3) = (x1, y1) + (x2, y2)
+  mul(x, y, k)          compute (x4, y4) = [k](x, y)
+
+"""
+
+# domain parameters for secp256r1
 p  = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 a  = -3
 b  = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
@@ -14,7 +17,13 @@ xG = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
 yG = 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
 q  = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
 
+# choose a point outside the curve to denote the point at infinity
+xZ, yZ = 0, 0
+
+# multiplicative inverse modulo p
 _inv  = lambda n: pow(n, p - 2, p)
+
+# square root modulo p
 _sqrt = lambda n: pow(n, (p + 1) // 4, p)
 
 def _is_valid_group_element(xP, yP):
@@ -23,7 +32,7 @@ def _is_valid_group_element(xP, yP):
         type(yP) is int and 0 <= yP <= p - 1
     ):
         return False
-    elif (xP, yP) == (0, 0):
+    elif (xP, yP) == (xZ, yZ):
         return True
     else:
         lhs = (yP ** 2) % p
@@ -53,12 +62,12 @@ def add(xP1, yP1, xP2, yP2):
     #
     assert _is_valid_group_element(xP1, yP1)
     assert _is_valid_group_element(xP2, yP2)
-    if (xP1, yP1) == (0, 0):
+    if (xP1, yP1) == (xZ, yZ):
         return xP2, yP2
-    elif (xP2, yP2) == (0, 0):
+    elif (xP2, yP2) == (xZ, yZ):
         return xP1, yP1
     elif xP1 == xP2 and yP1 != yP2:
-        return 0, 0
+        return xZ, yZ
     elif xP1 == xP2 and yP1 == yP2:
         return _dumb_DOUBLE(xP1, yP1)
     else:
@@ -152,10 +161,10 @@ def _MontgomeryLadder(xP, yP, k):
         else:
             X1, X2, Z = _AddDblCoZ(X1, X2, Z, xP)
     XX, YY, ZZ = _RecoverFullCoordinatesCoZ(X1, X2, Z, xP, yP)
-    assert ((ZZ * (YY ** 2 - b * ZZ ** 2)) % p ==
-            (XX * (XX ** 2 + a * ZZ ** 2)) % p)
-    return ((XX * pow(ZZ, p - 2, p)) % p,
-            (YY * pow(ZZ, p - 2, p)) % p)
+    #assert ((ZZ * (YY ** 2 - b * ZZ ** 2)) % p ==
+    #        (XX * (XX ** 2 + a * ZZ ** 2)) % p)
+    iZZ = _inv(ZZ)
+    return (XX * iZZ) % p, (YY * iZZ) % p
 
 def mul(xP, yP, k):
     #
@@ -168,8 +177,8 @@ def mul(xP, yP, k):
     assert _is_valid_group_element(xP, yP)
     assert type(k) is int
     k = k % q
-    if (xP, yP) == (0, 0) or k == 0:
-        return 0, 0
+    if (xP, yP) == (xZ, yZ) or k == 0:
+        return xZ, yZ
     elif k == 1:
         return xP, yP
     elif k == q - 1:
