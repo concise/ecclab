@@ -196,7 +196,6 @@ if __name__ == '__main__':
     print('k    = ' + hex(k))
     print('xQ   = ' + hex(xQ))
     print('yQ   = ' + hex(yQ))
-    print()
 
     v = randint(0, q - 1)
     w = randint(0, q - 1)
@@ -212,3 +211,4 @@ if __name__ == '__main__':
     print('Compute R = P + Q')
     print('time =', time_interval, 'milliseconds')
     print('It is', xU1 == xU2 and yU1 == yU2, 'that: [v]G+[w]G = [v+w]G')
+    print()
