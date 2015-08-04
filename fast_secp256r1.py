@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """
+This module provides:
 
   q                     the order of the elliptic curve group
   (xZ, yZ)              the point at infinity
   (xG, yG)              the base point
   add(x1, y1, x2, y2)   compute (x3, y3) = (x1, y1) + (x2, y2)
   mul(x, y, k)          compute (x4, y4) = [k](x, y)
+
+On a 64-bit platform:
+
+  add() needs 0.24 milliseconds on average
+  mul() needs 4.55 milliseconds on average
 
 """
 
@@ -194,7 +200,7 @@ if __name__ == '__main__':
 
     k = randint(0, q - 1)
     t1 = time()
-    xQ, yQ = mul(xG, yG, k) # 4.8 milliseconds on average
+    xQ, yQ = mul(xG, yG, k)
     t2 = time()
     time_interval = (t2 - t1) * 1000
 
@@ -211,7 +217,7 @@ if __name__ == '__main__':
     xW, yW = mul(xG, yG, w)
     xU1, yU1 = mul(xG, yG, u)
     t1 = time()
-    xU2, yU2 = add(xV, yV, xW, yW) # 0.23 milliseconds on average
+    xU2, yU2 = add(xV, yV, xW, yW)
     t2 = time()
     time_interval = (t2 - t1) * 1000
 
