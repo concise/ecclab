@@ -32,6 +32,19 @@ _inv  = lambda n: pow(n, p - 2, p)
 # square root modulo p
 _sqrt = lambda n: pow(n, (p + 1) // 4, p)
 
+def _y_candidates_from_x(x):
+    """
+    returns a 2-tuple (y0, y1) where y0 and y1 are both square roots of x;
+    y0 is an even number while y1 is an odd number.
+    """
+    if not (type(x) is int and 0 <= x <= p - 1):
+        raise ValueError('x is not an element of Fp')
+    yy = (x ** 3 + a * x + b) % p
+    y = _sqrt(yy)
+    if yy != y ** 2 % p:
+        raise ValueError('x is not an x-coordinate of some EC point')
+    return (y, p - y) if (y & 1 == 0) else (p - y, y)
+
 def _is_valid_group_element(xP, yP):
     if not (
         type(xP) is int and 0 <= xP <= p - 1 and
