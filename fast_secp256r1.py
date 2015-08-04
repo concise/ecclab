@@ -175,7 +175,7 @@ if __name__ == '__main__':
 
     k = randint(0, q - 1)
     t1 = time()
-    xQ, yQ = mul(xG, yG, k) # 4.7 milliseconds on average
+    xQ, yQ = mul(xG, yG, k) # 4.8 milliseconds on average
     t2 = time()
     time_interval = (t2 - t1) * 1000
 
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     xW, yW = mul(xG, yG, w)
     xU1, yU1 = mul(xG, yG, u)
     t1 = time()
-    xU2, yU2 = add(xV, yV, xW, yW)
+    xU2, yU2 = add(xV, yV, xW, yW) # 0.23 milliseconds on average
     t2 = time()
     time_interval = (t2 - t1) * 1000
 
