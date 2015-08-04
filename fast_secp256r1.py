@@ -121,13 +121,6 @@ def MontgomeryLadder(xP, yP, k):
     return ((XX * pow(ZZ, p - 2, p)) % p,
             (YY * pow(ZZ, p - 2, p)) % p)
 
-#def _is_a_square_number(n, mod):
-#    return n == (pow(n, (mod + 1) // 4, mod) ** 2) % mod
-#
-#def _is_a_valid_x_coord(xP):
-#    squared_yP = (xP ** 3 + a * xP + b) % p
-#    return _is_a_square_number(squared_yP, mod=p)
-#
 def scalarmul(xP, yP, k):
     #
     # Given P and k
