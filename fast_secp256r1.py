@@ -15,9 +15,7 @@ def is_valid_group_element(xP, yP):
         rhs = (xP ** 3 + a * xP + b) % p
         return lhs == rhs
 
-def group_element_add(xP1, yP1, xP2, yP2):
-    #
-    # TODO
+def add(xP1, yP1, xP2, yP2):
     #
     # Given P1 and P2
     # Compute Q = P1 + P2
@@ -28,6 +26,16 @@ def group_element_add(xP1, yP1, xP2, yP2):
     #
     assert is_valid_group_element(xP1, yP1)
     assert is_valid_group_element(xP2, yP2)
+    if (xP1, yP1) == (0, 0):
+        return xP2, yP2
+    elif (xP2, yP2) == (0, 0):
+        return xP1, yP1
+    elif xP1 == xP2 and yP1 != yP2:
+        return 0, 0
+    elif xP1 == xP2 and yP1 == yP2:
+        pass # TODO: DOUBLE
+    else:
+        pass # TODO: ADD
 
 def AddDblCoZ(X1, X2, Z, xD, _a_=a, _4b_=(4*b)%p):
     #
