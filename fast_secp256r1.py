@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+#
+# q                     the order of the elliptic curve group
+# (0, 0)                the point at infinity
+# (xG, yG)              the base point
+# add(x1, y1, x2, y2)   compute (x3, y3) = (x1, y1) + (x2, y2)
+# mul(x, y, k)          compute (x4, y4) = [k](x, y)
+#
 
 p  = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 a  = -3
@@ -11,7 +18,12 @@ _inv  = lambda n: pow(n, p - 2, p)
 _sqrt = lambda n: pow(n, (p + 1) // 4, p)
 
 def _is_valid_group_element(xP, yP):
-    if (xP, yP) == (0, 0):
+    if not (
+        type(xP) is int and 0 <= xP <= p - 1 and
+        type(yP) is int and 0 <= yP <= p - 1
+    ):
+        return False
+    elif (xP, yP) == (0, 0):
         return True
     else:
         lhs = (yP ** 2) % p
