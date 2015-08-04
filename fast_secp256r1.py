@@ -165,8 +165,6 @@ def mul(xP, yP, k):
     # P = ( xP ,  yP )
     # Q = ( xQ ,  yQ )
     #
-    assert type(xP) is int and 0 <= xP <= p - 1
-    assert type(yP) is int and 0 <= yP <= p - 1
     assert _is_valid_group_element(xP, yP)
     assert type(k) is int
     k = k % q
