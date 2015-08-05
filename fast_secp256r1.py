@@ -20,13 +20,13 @@ This python3 module provides:
 
 The last three functions listed above will raise a ValueError exception when
 the input is bad.  Here is a list of their execution time measured on a 64-bit
-platform by repeating the operations 10000 times:
+platform by repeating the operations with random inputs 10000 times:
 
     Python Function             Execution Time
     ---------------------       -----------------
     y_candidates_from_x         0.21 milliseconds
     add                         0.23 milliseconds
-    mul                         4.59 milliseconds
+    mul                         4.58 milliseconds
 
 """
 
