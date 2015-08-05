@@ -23,37 +23,39 @@ On a 64-bit platform:
 
 """
 
-# domain parameters for secp256r1
 p  = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 a  = -3
 b  = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
 xG = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
 yG = 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
 q  = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
+xZ = 0
+yZ = 0
 
-# choose a point outside the curve to denote the point at infinity
-xZ, yZ = 0, 0
+assert p % 4 == 3
+assert (yZ ** 2) % p != (xZ ** 3 + a * xZ + b) % p
+assert (yG ** 2) % p == (xG ** 3 + a * xG + b) % p
 
-# multiplicative inverse modulo p
-inv  = lambda n: pow(n, p - 2, p)
+def inv_mod_p(n):
+    return pow(n, p - 2, p)
 
-# square root modulo p when the prime p = 3 (mod 4)
-sqrt = lambda n: pow(n, (p + 1) // 4, p)
+def sqrt_mod_p(n):
+    return pow(n, (p + 1) // 4, p)
+
+def is_an_element_in_Fp(e):
+    return type(e) is int and 0 <= x <= p - 1
 
 def y_candidates_from_x(x):
-    if not (type(x) is int and 0 <= x <= p - 1):
+    if not is_an_element_in_Fp(x):
         raise ValueError('x is not an element of Fp')
     yy = (x ** 3 + a * x + b) % p
-    y = sqrt(yy)
+    y = sqrt_mod_p(yy)
     if yy != y ** 2 % p:
         raise ValueError('x is not an x-coordinate of some EC point')
     return (y, p - y) if (y & 1 == 0) else (p - y, y)
 
 def is_valid_ec_point(xP, yP):
-    if not (
-        type(xP) is int and 0 <= xP <= p - 1 and
-        type(yP) is int and 0 <= yP <= p - 1
-    ):
+    if not (is_an_element_in_Fp(xP) and is_an_element_in_Fp(yP)):
         return False
     elif (xP, yP) == (xZ, yZ):
         return True
@@ -62,25 +64,21 @@ def is_valid_ec_point(xP, yP):
         rhs = (xP ** 3 + a * xP + b) % p
         return lhs == rhs
 
-def simple_DOUBLE(x1, y1):
-    slope = (3 * x1 ** 2 + a) * inv(2 * y1) % p
-    x4 = (slope ** 2 - 2 * x1) % p
-    y4 = (slope * (x1 - x4) - y1) % p
-    return x4, y4
-
 def simple_ADD(x1, y1, x2, y2):
-    slope = (y2 - y1) * inv(x2 - x1) % p
+    slope = (y2 - y1) * inv_mod_p(x2 - x1) % p
     x3 = (slope ** 2 - x1 - x2) % p
     y3 = (slope * (x1 - x3) - y1) % p
     return x3, y3
 
+def simple_DOUBLE(x1, y1):
+    slope = (3 * x1 ** 2 + a) * inv_mod_p(2 * y1) % p
+    x4 = (slope ** 2 - 2 * x1) % p
+    y4 = (slope * (x1 - x4) - y1) % p
+    return x4, y4
+
 #
 # Given P1 and P2
-# Compute Q = P1 + P2
-#
-# P1 = ( xP1 ,  yP1 )
-# P2 = ( xP2 ,  yP2 )
-# Q  = ( xQ  ,  yQ  )
+# Compute P1 + P2
 #
 def add(xP1, yP1, xP2, yP2):
     if not is_valid_ec_point(xP1, yP1):
@@ -99,6 +97,9 @@ def add(xP1, yP1, xP2, yP2):
         return simple_ADD(xP1, yP1, xP2, yP2)
 
 #
+# Given P, Q, and the x-coordinate of Q - P
+# Compute P + Q and [2]Q
+#
 # Given (X1, X2, Z, xD)
 # Compute (X1', X2', Z')
 #
@@ -108,10 +109,10 @@ def add(xP1, yP1, xP2, yP2):
 # P' = ( X1' / Z' ,  ... ) = P + Q
 # Q' = ( X2' / Z' ,  ... ) = [2]Q
 #
-# Given (P, Q) as well as the x-coordinate of Q - P
-# Compute (P + Q, 2Q)
-#
-def AddDblCoZ(X1, X2, Z, xD, _a_=a, _4b_=(4*b)%p):
+def AddDblCoZ(
+    X1, X2, Z, xD,
+    _a_=a, _4b_=(4*b)%p
+):
     R2 = ( Z ** 2    ) % p
     R3 = ( _a_ * R2  ) % p
     R1 = ( Z * R2    ) % p
@@ -145,7 +146,8 @@ def AddDblCoZ(X1, X2, Z, xD, _a_=a, _4b_=(4*b)%p):
     return X1, X2, Z
 
 def RecoverFullCoordinatesCoZ(
-    X1, X2, Z, xD, yD, _a_=a, _4b_=(4*b)%p
+    X1, X2, Z, xD, yD,
+    _a_=a, _4b_=(4*b)%p
 ):
     R1 = ( xD * Z    ) % p
     R2 = ( X1 - R1   ) % p
@@ -170,15 +172,10 @@ def RecoverFullCoordinatesCoZ(
     return X1, X2, Z
 
 #
-# Given P and k
-# Compute Q = [k]Q
+# Given P and k where 2 <= k <= ord(P) - 2
+# Compute [k]P
 #
-# P = ( xP ,  yP )
-# Q = ( xQ ,  yQ )
-#
-# 2 <= k <= q-2  where  q = ord(P)
-#
-def MontgomeryLadder(xP, yP, k):
+def MontgomeryLadderCoZ(xP, yP, k):
     X1, X2, Z = AddDblCoZ(0, xP, 1, xP)
     X1 = (xP * Z) % p
     k_bit_sequence = tuple(map(int,bin(k)[2:]))
@@ -188,15 +185,12 @@ def MontgomeryLadder(xP, yP, k):
         else:
             X1, X2, Z = AddDblCoZ(X1, X2, Z, xP)
     XX, YY, ZZ = RecoverFullCoordinatesCoZ(X1, X2, Z, xP, yP)
-    iZZ = inv(ZZ)
+    iZZ = inv_mod_p(ZZ)
     return (XX * iZZ) % p, (YY * iZZ) % p
 
 #
 # Given P and k
-# Compute Q = [k]Q
-#
-# P = ( xP ,  yP )
-# Q = ( xQ ,  yQ )
+# Compute [k]P
 #
 def mul(xP, yP, k):
     if not is_valid_ec_point(xP, yP):
@@ -211,7 +205,7 @@ def mul(xP, yP, k):
     elif k == q - 1:
         return xP, p - yP
     else:
-        return MontgomeryLadder(xP, yP, k)
+        return MontgomeryLadderCoZ(xP, yP, k)
 
 
 if __name__ == '__main__':
