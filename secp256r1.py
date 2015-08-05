@@ -91,11 +91,15 @@ def fp_cube(elm):
     return fp_mul(fp_mul(elm, elm), elm)
 
 def fp_sqrt(elm, parity=None):
-    # n^2 === n^( (p - 1) + 2 ) (mod p)
-    # n^2 === n^(  p + 1      ) (mod p)
-    # n   === n^( (p + 1) / 2 ) (mod p)
-    # m^2 === n^( (p + 1) / 2 ) (mod p)
-    # m   === n^( (p + 1) / 4 ) (mod p)
+    #
+    # n^2 ===    n^( (p - 1) + 2 ) (mod p)
+    # n^2 ===    n^(  p + 1      ) (mod p)
+    # n   === +- n^( (p + 1) / 2 ) (mod p)
+    #
+    # m^2 ===    n
+    # m^2 ===    n^( (p + 1) / 2 ) (mod p)
+    # m   ===    n^( (p + 1) / 4 ) (mod p)
+    #
     assert _is_an_fp_representation_(elm)
     assert parity is None or type(parity) is int
     candidate = _FpTAG_, pow(elm[1], (_p_ + 1) // 4, _p_)

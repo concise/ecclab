@@ -28,7 +28,7 @@ xZ, yZ = 0, 0
 # multiplicative inverse modulo p
 inv  = lambda n: pow(n, p - 2, p)
 
-# square root modulo p
+# square root modulo p when the prime p = 3 (mod 4)
 sqrt = lambda n: pow(n, (p + 1) // 4, p)
 
 def y_candidates_from_x(x):
