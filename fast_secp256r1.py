@@ -43,7 +43,7 @@ def sqrt_mod_p(n):
     return pow(n, (p + 1) // 4, p)
 
 def is_an_element_in_Fp(e):
-    return type(e) is int and 0 <= x <= p - 1
+    return type(e) is int and 0 <= e <= p - 1
 
 def y_candidates_from_x(x):
     if not is_an_element_in_Fp(x):
