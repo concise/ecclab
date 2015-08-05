@@ -3,23 +3,30 @@
 This python3 module provides:
 
     q                           the order of the elliptic curve group
+
     (xZ, yZ)                    the point at infinity
+
     (xG, yG)                    the base point
+
     is_valid_ec_point(x, y)     checks if (x, y) is a valid EC point
 
-The following three functions will raise ValueError when the input is bad:
-
     add(x1, y1, x2, y2)         computes (x3, y3) = (x1, y1) + (x2, y2)
+
     mul(x, y, k)                computes (x4, y4) = [k](x, y)
+
     y_candidates_from_x(x)      computes (y0, y1) so that both (x, y0) and
                                 (x, y1) are valid EC points where y0 is an
                                 even number while y1 is an odd number
 
-On a 64-bit platform:
+The last three functions listed above will raise a ValueError exception when
+the input is bad.  Here is a list of their execution time measured on a 64-bit
+platform by repeating the operations 10000 times:
 
-    y_candidates_from_x()       needs 0.21 milliseconds
-    add()                       needs 0.24 milliseconds
-    mul()                       needs 4.55 milliseconds
+    Python Function             Execution Time
+    ---------------------       -----------------
+    y_candidates_from_x         0.21 milliseconds
+    add                         0.23 milliseconds
+    mul                         4.59 milliseconds
 
 """
 
