@@ -65,15 +65,15 @@ def simple_ADD(x1, y1, x2, y2):
     y3 = (slope * (x1 - x3) - y1) % p
     return x3, y3
 
+#
+# Given P1 and P2
+# Compute Q = P1 + P2
+#
+# P1 = ( xP1 ,  yP1 )
+# P2 = ( xP2 ,  yP2 )
+# Q  = ( xQ  ,  yQ  )
+#
 def add(xP1, yP1, xP2, yP2):
-    #
-    # Given P1 and P2
-    # Compute Q = P1 + P2
-    #
-    # P1 = ( xP1 ,  yP1 )
-    # P2 = ( xP2 ,  yP2 )
-    # Q  = ( xQ  ,  yQ  )
-    #
     if not is_valid_group_element(xP1, yP1):
         raise ValueError('(xP1, yP1) is not an EC point')
     if not is_valid_group_element(xP2, yP2):
@@ -89,20 +89,20 @@ def add(xP1, yP1, xP2, yP2):
     else:
         return simple_ADD(xP1, yP1, xP2, yP2)
 
+#
+# Given (X1, X2, Z, xD)
+# Compute (X1', X2', Z')
+#
+# P  = ( X1  / Z  ,  ... )
+# Q  = ( X2  / Z  ,  ... )
+# D  = ( xD       ,  ... ) = Q - P
+# P' = ( X1' / Z' ,  ... ) = P + Q
+# Q' = ( X2' / Z' ,  ... ) = [2]Q
+#
+# Given (P, Q) as well as the x-coordinate of Q - P
+# Compute (P + Q, 2Q)
+#
 def AddDblCoZ(X1, X2, Z, xD, _a_=a, _4b_=(4*b)%p):
-    #
-    # Given (X1, X2, Z, xD)
-    # Compute (X1', X2', Z')
-    #
-    # P  = ( X1  / Z  ,  ... )
-    # Q  = ( X2  / Z  ,  ... )
-    # D  = ( xD       ,  ... ) = Q - P
-    # P' = ( X1' / Z' ,  ... ) = P + Q
-    # Q' = ( X2' / Z' ,  ... ) = [2]Q
-    #
-    # Given (P, Q) as well as the x-coordinate of Q - P
-    # Compute (P + Q, 2Q)
-    #
     R2 = ( Z ** 2    ) % p
     R3 = ( _a_ * R2  ) % p
     R1 = ( Z * R2    ) % p
@@ -160,16 +160,16 @@ def RecoverFullCoordinatesCoZ(
     X2 = ( R4 + R3   ) % p
     return X1, X2, Z
 
+#
+# Given P and k
+# Compute Q = [k]Q
+#
+# P = ( xP ,  yP )
+# Q = ( xQ ,  yQ )
+#
+# 2 <= k <= q-2  where  q = ord(P)
+#
 def MontgomeryLadder(xP, yP, k):
-    #
-    # Given P and k
-    # Compute Q = [k]Q
-    #
-    # P = ( xP ,  yP )
-    # Q = ( xQ ,  yQ )
-    #
-    # 2 <= k <= q-2  where  q = ord(P)
-    #
     X1, X2, Z = AddDblCoZ(0, xP, 1, xP)
     X1 = (xP * Z) % p
     k_bit_sequence = tuple(map(int,bin(k)[2:]))
@@ -182,14 +182,14 @@ def MontgomeryLadder(xP, yP, k):
     iZZ = inv(ZZ)
     return (XX * iZZ) % p, (YY * iZZ) % p
 
+#
+# Given P and k
+# Compute Q = [k]Q
+#
+# P = ( xP ,  yP )
+# Q = ( xQ ,  yQ )
+#
 def mul(xP, yP, k):
-    #
-    # Given P and k
-    # Compute Q = [k]Q
-    #
-    # P = ( xP ,  yP )
-    # Q = ( xQ ,  yQ )
-    #
     if not is_valid_group_element(xP, yP):
         raise ValueError('(xP, yP) is not an EC point')
     if not type(k) is int:
