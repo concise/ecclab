@@ -1,16 +1,25 @@
 """
-This module provides:
 
-  q                     the order of the elliptic curve group
-  (xZ, yZ)              the point at infinity
-  (xG, yG)              the base point
-  add(x1, y1, x2, y2)   compute (x3, y3) = (x1, y1) + (x2, y2)
-  mul(x, y, k)          compute (x4, y4) = [k](x, y)
+This python3 module provides:
+
+    q                           the order of the elliptic curve group
+    (xZ, yZ)                    the point at infinity
+    (xG, yG)                    the base point
+    is_valid_ec_point(x, y)     checks if (x, y) is a valid EC point
+
+The following three functions will raise ValueError when the input is bad:
+
+    add(x1, y1, x2, y2)         computes (x3, y3) = (x1, y1) + (x2, y2)
+    mul(x, y, k)                computes (x4, y4) = [k](x, y)
+    y_candidates_from_x(x)      computes (y0, y1) so that both (x, y0) and
+                                (x, y1) are valid EC points where y0 is an
+                                even number while y1 is an odd number
 
 On a 64-bit platform:
 
-  add() needs 0.24 milliseconds on average
-  mul() needs 4.55 milliseconds on average
+    y_candidates_from_x()       needs 0.21 milliseconds
+    add()                       needs 0.24 milliseconds
+    mul()                       needs 4.55 milliseconds
 
 """
 
@@ -40,7 +49,7 @@ def y_candidates_from_x(x):
         raise ValueError('x is not an x-coordinate of some EC point')
     return (y, p - y) if (y & 1 == 0) else (p - y, y)
 
-def is_valid_group_element(xP, yP):
+def is_valid_ec_point(xP, yP):
     if not (
         type(xP) is int and 0 <= xP <= p - 1 and
         type(yP) is int and 0 <= yP <= p - 1
@@ -74,9 +83,9 @@ def simple_ADD(x1, y1, x2, y2):
 # Q  = ( xQ  ,  yQ  )
 #
 def add(xP1, yP1, xP2, yP2):
-    if not is_valid_group_element(xP1, yP1):
+    if not is_valid_ec_point(xP1, yP1):
         raise ValueError('(xP1, yP1) is not an EC point')
-    if not is_valid_group_element(xP2, yP2):
+    if not is_valid_ec_point(xP2, yP2):
         raise ValueError('(xP2, yP2) is not an EC point')
     if (xP1, yP1) == (xZ, yZ):
         return xP2, yP2
@@ -190,7 +199,7 @@ def MontgomeryLadder(xP, yP, k):
 # Q = ( xQ ,  yQ )
 #
 def mul(xP, yP, k):
-    if not is_valid_group_element(xP, yP):
+    if not is_valid_ec_point(xP, yP):
         raise ValueError('(xP, yP) is not an EC point')
     if not type(k) is int:
         raise ValueError('k is not an integer')
