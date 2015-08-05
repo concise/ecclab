@@ -33,10 +33,6 @@ _inv  = lambda n: pow(n, p - 2, p)
 _sqrt = lambda n: pow(n, (p + 1) // 4, p)
 
 def _y_candidates_from_x(x):
-    """
-    returns a 2-tuple (y0, y1) where y0 and y1 are both square roots of x;
-    y0 is an even number while y1 is an odd number.
-    """
     if not (type(x) is int and 0 <= x <= p - 1):
         raise ValueError('x is not an element of Fp')
     yy = (x ** 3 + a * x + b) % p
@@ -58,13 +54,13 @@ def _is_valid_group_element(xP, yP):
         rhs = (xP ** 3 + a * xP + b) % p
         return lhs == rhs
 
-def _dumb_DOUBLE(x1, y1):
+def _simple_DOUBLE(x1, y1):
     slope = (3 * x1 ** 2 + a) * _inv(2 * y1) % p
     x4 = (slope ** 2 - 2 * x1) % p
     y4 = (slope * (x1 - x4) - y1) % p
     return x4, y4
 
-def _dumb_ADD(x1, y1, x2, y2):
+def _simple_ADD(x1, y1, x2, y2):
     slope = (y2 - y1) * _inv(x2 - x1) % p
     x3 = (slope ** 2 - x1 - x2) % p
     y3 = (slope * (x1 - x3) - y1) % p
@@ -88,9 +84,9 @@ def add(xP1, yP1, xP2, yP2):
     elif xP1 == xP2 and yP1 != yP2:
         return xZ, yZ
     elif xP1 == xP2 and yP1 == yP2:
-        return _dumb_DOUBLE(xP1, yP1)
+        return _simple_DOUBLE(xP1, yP1)
     else:
-        return _dumb_ADD(xP1, yP1, xP2, yP2)
+        return _simple_ADD(xP1, yP1, xP2, yP2)
 
 def _AddDblCoZ(X1, X2, Z, xD, _a_=a, _4b_=(4*b)%p):
     #
@@ -216,12 +212,12 @@ if __name__ == '__main__':
     xQ, yQ = mul(xG, yG, k)
     t2 = time()
     time_interval = (t2 - t1) * 1000
-
     print('Compute Q = [k]G')
     print('time =', time_interval, 'milliseconds')
     print('k    = ' + hex(k))
     print('xQ   = ' + hex(xQ))
     print('yQ   = ' + hex(yQ))
+    print()
 
     v = randint(0, q - 1)
     w = randint(0, q - 1)
@@ -233,8 +229,21 @@ if __name__ == '__main__':
     xU2, yU2 = add(xV, yV, xW, yW)
     t2 = time()
     time_interval = (t2 - t1) * 1000
-
     print('Compute R = P + Q')
     print('time =', time_interval, 'milliseconds')
     print('It is', xU1 == xU2 and yU1 == yU2, 'that: [v]G+[w]G = [v+w]G')
+    print()
+
+    t = randint(0, q - 1)
+    xT, yT = mul(xG, yG, t)
+    t1 = time()
+    yT0, yT1 = _y_candidates_from_x(xT)
+    t2 = time()
+    time_interval = (t2 - t1) * 1000
+    print('Compute y from x')
+    print('time =', time_interval, 'milliseconds')
+    if yT in {yT0, yT1}:
+        print('OK')
+    else:
+        print('NG')
     print()
