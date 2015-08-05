@@ -33,8 +33,8 @@ xZ = 0
 yZ = 0
 
 assert p % 4 == 3
-assert (yZ ** 2) % p != (xZ ** 3 + a * xZ + b) % p
-assert (yG ** 2) % p == (xG ** 3 + a * xG + b) % p
+assert (xZ ** 3 + a * xZ + b - yZ ** 2) % p != 0
+assert (xG ** 3 + a * xG + b - yG ** 2) % p == 0
 
 def inv_mod_p(n):
     return pow(n, p - 2, p)
