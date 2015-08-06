@@ -57,7 +57,8 @@ def _SELF_CHECK():
     xS, yS = mul(xG, yG, s)
     xT, yT = mul(xG, yG, t)
     assert (xT, yT) == add(xR, yR, xS, yS)
-    assert (xT, yT) == add(xT, yT, xZ, yZ) == add(xZ, yZ, xT, yT)
+    assert (xT, yT) == add(xT, yT, xZ, yZ)
+    assert (xT, yT) == add(xZ, yZ, xT, yT)
     assert add(xT, yT, xT, yT) == mul(xT, yT, 2)
 
 def inv_mod_p(n):
