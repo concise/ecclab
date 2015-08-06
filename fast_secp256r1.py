@@ -40,9 +40,9 @@ xZ = 0
 yZ = 0
 
 def _SELF_CHECK():
-    assert is_prime(p)
-    assert is_prime(q)
-    assert p & 3 == 3
+    assert { int } >= set(map(type, [ p, a, b, xG, yG, q, xZ, yZ ]))
+    assert p >= 5 and is_prime(p) and p & 3 == 3
+    assert q >= 2 and is_prime(q)
     assert (xG ** 3 + a * xG + b - yG ** 2) % p == 0
     assert (xZ ** 3 + a * xZ + b - yZ ** 2) % p != 0
     assert mul(xG, yG,  0) == (xZ, yZ)
