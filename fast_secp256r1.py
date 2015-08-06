@@ -76,7 +76,7 @@ def y_candidates_from_x(x):
     yy = (x * x * x + a * x + b) % p
     y = sqrt_mod_p(yy)
     if yy != y * y % p:
-        raise ValueError('x is not an x-coordinate of some EC point')
+        raise ValueError('x is not an x-coordinate of some non-zero EC point')
     return (y, p - y) if (y & 1 == 0) else (p - y, y)
 
 def is_valid_ec_point(xP, yP):
