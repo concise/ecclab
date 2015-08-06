@@ -277,10 +277,10 @@ def is_prime(n):
         raise TypeError('is_prime() accepts an integer greater than 1')
     if n < 2:
         raise ValueError('is_prime() accepts an integer greater than 1')
-    if n & 1 == 0:
-        return False
     if n == 2 or n == 3:
         return True
+    if n & 1 == 0:
+        return False
 
     # False means n is composite
     # True  means n is probably prime
