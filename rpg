@@ -55,15 +55,36 @@ def is_prime(n):
 
 if __name__ == '__main__':
 
-    def generate_a_prime_number(max_bit_length=256):
+    from sys import argv, exit, stderr
+
+    def print_usage():
+        print('rpg -- random prime generator', file=stderr)
+        print('', file=stderr)
+        print('Usage:' '\n\t' 'rpg BIT_LENGTH', file=stderr)
+        print('', file=stderr)
+
+    if len(argv) != 2:
+        print_usage()
+        exit(1)
+
+    try:
+        maxblen = int(argv[1])
+        if maxblen < 2:
+            raise ValueError
+    except ValueError:
+        print_usage()
+        exit(1)
+
+    def generate_a_prime_number(bit_length=256):
         from random import randint
-        for _ in range(4 * max_bit_length):
-            n = randint(2, (1 << max_bit_length) - 1)
+        for _ in range(4 * bit_length):
+            n = randint(2, (1 << bit_length) - 1) | (1 << (bit_length - 1))
             if is_prime(n):
                 return n
 
-    p = generate_a_prime_number(4)
+    p = generate_a_prime_number(maxblen)
     if p:
         print(p)
     else:
-        print('Cannot find a prime number under limited time')
+        print('Cannot find a prime number under limited time', file=stderr)
+        exit(1)
