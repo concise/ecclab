@@ -27,7 +27,7 @@ platform by repeating the operations with random inputs 10000 times:
     ---------------------       -----------------
     y_candidates_from_x         0.21 milliseconds
     add                         0.23 milliseconds
-    scalarmul                         4.58 milliseconds
+    scalarmul                   4.58 milliseconds
 
 """
 
