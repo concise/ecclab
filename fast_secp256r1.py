@@ -43,16 +43,22 @@ def _SELF_CHECK():
     from primality_test import is_prime
     assert is_prime(p)
     assert is_prime(q)
-    assert p % 4 == 3
-    assert (xZ ** 3 + a * xZ + b - yZ ** 2) % p != 0
+    assert p & 3 == 3
     assert (xG ** 3 + a * xG + b - yG ** 2) % p == 0
+    assert (xZ ** 3 + a * xZ + b - yZ ** 2) % p != 0
     assert mul(xG, yG,  0) == (xZ, yZ)
-    assert mul(xG, yG,  0) == add(*(mul(xG, yG, -1) + (xG, yG)))
-    assert mul(xG, yG, -1) == add(*(mul(xG, yG, -2) + (xG, yG)))
-    assert mul(xG, yG, -2) == add(*(mul(xG, yG, -3) + (xG, yG)))
-    i = 0x58fecaddfe0680d37ac1768ac214b4998dc788572261f8865e4b117253b2caf3
-    j = 0xb27b5dc31f118d6104b33c31dd871aab2c5f3e79736b3f82767af62e9d16b041
-    assert mul(xG, yG, i + j) == add(*(mul(xG, yG, i) + mul(xG, yG, j)))
+    assert mul(xG, yG,  0) == add(  *(  mul(xG, yG, -1) + (xG, yG)  )  )
+    assert mul(xG, yG, -1) == add(  *(  mul(xG, yG, -2) + (xG, yG)  )  )
+    assert mul(xG, yG, -2) == add(  *(  mul(xG, yG, -3) + (xG, yG)  )  )
+    r = 0xb27b5dc31f118d6104b33c31dd871aab2c5f3e79736b3f82767af62e9d16b041
+    s = 0x58fecaddfe0680d37ac1768ac214b4998dc788572261f8865e4b117253b2caf3
+    t = r + s
+    xR, yR = mul(xG, yG, r)
+    xS, yS = mul(xG, yG, s)
+    xT, yT = mul(xG, yG, t)
+    assert (xT, yT) == add(xR, yR, xS, yS)
+    assert (xT, yT) == add(xT, yT, xZ, yZ) == add(xZ, yZ, xT, yT)
+    assert add(xT, yT, xT, yT) == mul(xT, yT, 2)
 
 def inv_mod_p(n):
     return pow(n, p - 2, p)
