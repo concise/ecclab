@@ -5,7 +5,7 @@ This python3 module provides:
 
     q                           the order of the elliptic curve group
 
-    (xZ, yZ)                    the point at infinity
+    (xZ, yZ)                    the zero point, aka the point at infinity
 
     (xG, yG)                    the base point
 
