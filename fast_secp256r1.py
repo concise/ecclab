@@ -16,7 +16,7 @@ This python3 module provides:
 
     y_candidates_from_x(x)      computes (y0, y1) so that both (x, y0) and
                                 (x, y1) are valid EC points where y0 is an
-                                even number while y1 is an odd number
+                                even number and y1 is an odd number
 
 The last three functions listed above will raise a ValueError exception when
 the input is bad.  Here is a list of their execution time measured on a 64-bit
