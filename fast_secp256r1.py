@@ -25,9 +25,9 @@ platform by repeating the operations with random inputs 10000 times:
 
     Python Function             Execution Time
     ---------------------       -----------------
-    y_candidates_from_x         0.21 milliseconds
-    add                         0.23 milliseconds
-    scalarmul                   4.58 milliseconds
+    y_candidates_from_x         0.2 milliseconds
+    add                         0.2 milliseconds
+    scalarmul                   4.0 milliseconds
 
 """
 
@@ -44,8 +44,8 @@ def _SELF_CHECK():
     assert { int } >= set(map(type, [ p, a, b, xG, yG, q, xZ, yZ ]))
     assert p >= 5 and is_prime(p) and p & 3 == 3
     assert q >= 2 and is_prime(q)
-    assert (xG ** 3 + a * xG + b - yG ** 2) % p == 0
-    assert (xZ ** 3 + a * xZ + b - yZ ** 2) % p != 0
+    assert (xG * xG * xG + a * xG + b - yG * yG) % p == 0
+    assert (xZ * xZ * xZ + a * xZ + b - yZ * yZ) % p != 0
     assert scalarmul(xG, yG,  0) == (xZ, yZ)
     assert scalarmul(xG, yG,  0) == add(*( scalarmul(xG, yG, -1) + (xG, yG) ))
     assert scalarmul(xG, yG, -1) == add(*( scalarmul(xG, yG, -2) + (xG, yG) ))
@@ -73,9 +73,9 @@ def is_an_element_in_Fp(e):
 def y_candidates_from_x(x):
     if not is_an_element_in_Fp(x):
         raise ValueError('x is not an element of Fp')
-    yy = (x ** 3 + a * x + b) % p
+    yy = (x * x * x + a * x + b) % p
     y = sqrt_mod_p(yy)
-    if yy != y ** 2 % p:
+    if yy != y * y % p:
         raise ValueError('x is not an x-coordinate of some EC point')
     return (y, p - y) if (y & 1 == 0) else (p - y, y)
 
@@ -85,19 +85,19 @@ def is_valid_ec_point(xP, yP):
     elif (xP, yP) == (xZ, yZ):
         return True
     else:
-        lhs = (yP ** 2) % p
-        rhs = (xP ** 3 + a * xP + b) % p
+        lhs = (yP * yP) % p
+        rhs = (xP * xP * xP + a * xP + b) % p
         return lhs == rhs
 
 def simple_ADD(x1, y1, x2, y2):
     slope = (y2 - y1) * inv_mod_p(x2 - x1) % p
-    x3 = (slope ** 2 - x1 - x2) % p
+    x3 = (slope * slope - x1 - x2) % p
     y3 = (slope * (x1 - x3) - y1) % p
     return x3, y3
 
 def simple_DOUBLE(x1, y1):
-    slope = (3 * x1 ** 2 + a) * inv_mod_p(2 * y1) % p
-    x4 = (slope ** 2 - 2 * x1) % p
+    slope = (3 * x1 * x1 + a) * inv_mod_p(2 * y1) % p
+    x4 = (slope * slope - 2 * x1) % p
     y4 = (slope * (x1 - x4) - y1) % p
     return x4, y4
 
@@ -141,26 +141,26 @@ def AddDblCoZ(
     X1, X2, Z, xD,
     _a_=a, _4b_=(4*b)%p
 ):
-    R2 = ( Z ** 2    ) % p
+    R2 = ( Z * Z     ) % p
     R3 = ( _a_ * R2  ) % p
     R1 = ( Z * R2    ) % p
     R2 = ( _4b_ * R1 ) % p
-    R1 = ( X2 ** 2   ) % p
+    R1 = ( X2 * X2   ) % p
     R5 = ( R1 - R3   ) % p
-    R4 = ( R5 ** 2   ) % p
+    R4 = ( R5 * R5   ) % p
     R1 = ( R1 + R3   ) % p
     R5 = ( X2 * R1   ) % p
     R5 = ( R5 + R5   ) % p
     R5 = ( R5 + R5   ) % p
     R5 = ( R5 + R2   ) % p
     R1 = ( R1 + R3   ) % p
-    R3 = ( X1 ** 2   ) % p
+    R3 = ( X1 * X1   ) % p
     R1 = ( R1 + R3   ) % p
     X1 = ( X1 - X2   ) % p
     X2 = ( X2 + X2   ) % p
     R3 = ( X2 * R2   ) % p
     R4 = ( R4 - R3   ) % p
-    R3 = ( X1 ** 2   ) % p
+    R3 = ( X1 * X1   ) % p
     R1 = ( R1 - R3   ) % p
     X1 = ( X1 + X2   ) % p
     X2 = ( X1 * R1   ) % p
@@ -183,11 +183,11 @@ def RecoverFullCoordinatesCoZ(
 ):
     R1 = ( xD * Z    ) % p
     R2 = ( X1 - R1   ) % p
-    R3 = ( R2 ** 2   ) % p
+    R3 = ( R2 * R2   ) % p
     R4 = ( R3 * X2   ) % p
     R2 = ( R1 * X1   ) % p
     R1 = ( X1 + R1   ) % p
-    X2 = ( Z ** 2    ) % p
+    X2 = ( Z * Z     ) % p
     R3 = ( _a_ * X2  ) % p
     R2 = ( R2 + R3   ) % p
     R3 = ( R2 * R1   ) % p
@@ -258,7 +258,7 @@ def is_prime(n):
         if x == 1 or x == n - 1:
             return True
         for j in range(1, r):
-            x = pow(x, 2, n) # x = pow(a, s * (2 ** j), n)
+            x = (x * x) % n
             if x == 1:
                 return False
             if x == n - 1:
