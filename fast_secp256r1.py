@@ -13,7 +13,7 @@ This python3 module provides:
 
     add(x1, y1, x2, y2)         computes (x3, y3) = (x1, y1) + (x2, y2)
 
-    mul(x, y, k)                computes (x4, y4) = [k](x, y)
+    scalarmul(x, y, k)          computes (x4, y4) = [k](x, y)
 
     y_candidates_from_x(x)      computes (y0, y1) so that both (x, y0) and
                                 (x, y1) are valid non-zero EC points, where
@@ -27,7 +27,7 @@ platform by repeating the operations with random inputs 10000 times:
     ---------------------       -----------------
     y_candidates_from_x         0.21 milliseconds
     add                         0.23 milliseconds
-    mul                         4.58 milliseconds
+    scalarmul                         4.58 milliseconds
 
 """
 
@@ -46,20 +46,20 @@ def _SELF_CHECK():
     assert q >= 2 and is_prime(q)
     assert (xG ** 3 + a * xG + b - yG ** 2) % p == 0
     assert (xZ ** 3 + a * xZ + b - yZ ** 2) % p != 0
-    assert mul(xG, yG,  0) == (xZ, yZ)
-    assert mul(xG, yG,  0) == add(*(  mul(xG, yG, -1) + (xG, yG)  ))
-    assert mul(xG, yG, -1) == add(*(  mul(xG, yG, -2) + (xG, yG)  ))
-    assert mul(xG, yG, -2) == add(*(  mul(xG, yG, -3) + (xG, yG)  ))
+    assert scalarmul(xG, yG,  0) == (xZ, yZ)
+    assert scalarmul(xG, yG,  0) == add(*( scalarmul(xG, yG, -1) + (xG, yG) ))
+    assert scalarmul(xG, yG, -1) == add(*( scalarmul(xG, yG, -2) + (xG, yG) ))
+    assert scalarmul(xG, yG, -2) == add(*( scalarmul(xG, yG, -3) + (xG, yG) ))
     r = 0xb27b5dc31f118d6104b33c31dd871aab2c5f3e79736b3f82767af62e9d16b041
     s = 0x58fecaddfe0680d37ac1768ac214b4998dc788572261f8865e4b117253b2caf3
     t = r + s
-    xR, yR = mul(xG, yG, r)
-    xS, yS = mul(xG, yG, s)
-    xT, yT = mul(xG, yG, t)
+    xR, yR = scalarmul(xG, yG, r)
+    xS, yS = scalarmul(xG, yG, s)
+    xT, yT = scalarmul(xG, yG, t)
     assert (xT, yT) == add(xR, yR, xS, yS)
     assert (xT, yT) == add(xT, yT, xZ, yZ)
     assert (xT, yT) == add(xZ, yZ, xT, yT)
-    assert add(xT, yT, xT, yT) == mul(xT, yT, 2)
+    assert add(xT, yT, xT, yT) == scalarmul(xT, yT, 2)
 
 def inv_mod_p(n):
     return pow(n, p - 2, p)
@@ -224,7 +224,7 @@ def MontgomeryLadderCoZ(xP, yP, k):
 # Given P and k
 # Compute [k]P
 #
-def mul(xP, yP, k):
+def scalarmul(xP, yP, k):
     if not is_valid_ec_point(xP, yP):
         raise ValueError('(xP, yP) is not an EC point')
     if not type(k) is int:
@@ -301,7 +301,7 @@ if __name__ == '__main__':
 
     k = randint(0, q - 1)
     t1 = time()
-    xQ, yQ = mul(xG, yG, k)
+    xQ, yQ = scalarmul(xG, yG, k)
     t2 = time()
     time_interval = (t2 - t1) * 1e3
     print('Compute Q = [k]G')
@@ -314,9 +314,9 @@ if __name__ == '__main__':
     v = randint(0, q - 1)
     w = randint(0, q - 1)
     u = v + w
-    xV, yV = mul(xG, yG, v)
-    xW, yW = mul(xG, yG, w)
-    xU1, yU1 = mul(xG, yG, u)
+    xV, yV = scalarmul(xG, yG, v)
+    xW, yW = scalarmul(xG, yG, w)
+    xU1, yU1 = scalarmul(xG, yG, u)
     t1 = time()
     xU2, yU2 = add(xV, yV, xW, yW)
     t2 = time()
@@ -327,7 +327,7 @@ if __name__ == '__main__':
     print()
 
     t = randint(0, q - 1)
-    xT, yT = mul(xG, yG, t)
+    xT, yT = scalarmul(xG, yG, t)
     t1 = time()
     yT0, yT1 = y_candidates_from_x(xT)
     t2 = time()
