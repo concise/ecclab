@@ -134,8 +134,8 @@ def add(xP1, yP1, xP2, yP2):
 # P' = ( X1' / Z' ,  ... ) = P + Q
 # Q' = ( X2' / Z' ,  ... ) = [2]Q
 #
-# This is the Algorithm 5 in the paper "Memory-Constrained Implementations of
-# Elliptic Curve Cryptography in Co-Z Coordinate Representation"
+# This is the Algorithm 5 from the paper "Memory-Constrained Implementations
+# of Elliptic Curve Cryptography in Co-Z Coordinate Representation"
 #
 def AddDblCoZ(
     X1, X2, Z, xD,
@@ -174,8 +174,8 @@ def AddDblCoZ(
     return X1, X2, Z
 
 #
-# This is the Algorithm 7 in the paper "Memory-Constrained Implementations of
-# Elliptic Curve Cryptography in Co-Z Coordinate Representation"
+# This is the Algorithm 7 from the paper "Memory-Constrained Implementations
+# of Elliptic Curve Cryptography in Co-Z Coordinate Representation"
 #
 def RecoverFullCoordinatesCoZ(
     X1, X2, Z, xD, yD,
