@@ -16,8 +16,8 @@ This python3 module provides:
     mul(x, y, k)                computes (x4, y4) = [k](x, y)
 
     y_candidates_from_x(x)      computes (y0, y1) so that both (x, y0) and
-                                (x, y1) are valid EC points where y0 is an
-                                even number and y1 is an odd number
+                                (x, y1) are valid non-zero EC points, where
+                                y0 is an even number and y1 is an odd number
 
 The last three functions listed above will raise a ValueError exception when
 the input is bad.  Here is a list of their execution time measured on a 64-bit
@@ -303,7 +303,7 @@ if __name__ == '__main__':
     t1 = time()
     xQ, yQ = mul(xG, yG, k)
     t2 = time()
-    time_interval = (t2 - t1) * 1000
+    time_interval = (t2 - t1) * 1e3
     print('Compute Q = [k]G')
     print('time =', time_interval, 'milliseconds')
     print('k    = ' + hex(k))
@@ -320,7 +320,7 @@ if __name__ == '__main__':
     t1 = time()
     xU2, yU2 = add(xV, yV, xW, yW)
     t2 = time()
-    time_interval = (t2 - t1) * 1000
+    time_interval = (t2 - t1) * 1e3
     print('Compute R = P + Q')
     print('time =', time_interval, 'milliseconds')
     print('It is', xU1 == xU2 and yU1 == yU2, 'that: [v]G+[w]G = [v+w]G')
@@ -331,10 +331,10 @@ if __name__ == '__main__':
     t1 = time()
     yT0, yT1 = y_candidates_from_x(xT)
     t2 = time()
-    time_interval = (t2 - t1) * 1000
+    time_interval = (t2 - t1) * 1e3
     print('Compute y from x')
     print('time =', time_interval, 'milliseconds')
-    if yT in {yT0, yT1}:
+    if yT in { yT0, yT1 }:
         print('OK')
     else:
         print('NG')
