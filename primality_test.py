@@ -1,64 +1,56 @@
 #!/usr/bin/env python3
 
 def is_prime(n):
-    """
-    False means n is composite number
-    True means n is a prime number with probability > (1 - 2**(-128))
-    """
-    assert type(n) is int and n >= 2
-    if n == 2 or n == 3:
-        return True
-    if n & 1 == 0:
+
+    # generates min(k, n - 3) integers in the range [2, n - 2]
+    def random_integers(n, k):
+        import random
+        if k >= n - 3:
+            yield from range(2, n - 1)
+        elif n <= 0xffff:
+            yield from random.sample(range(2, n - 1), k)
+        else:
+            for _ in range(k):
+                yield random.randint(2, n - 2)
+
+    # test the primality of n using a
+    def rabin_miller_test(n, r, s, a):
+        x = pow(a, s, n)
+        if x == 1 or x == n - 1:
+            return True
+        for j in range(1, r):
+            x = pow(x, 2, n) # x = pow(a, s * (2 ** j), n)
+            if x == 1:
+                return False
+            if x == n - 1:
+                return True
         return False
 
-    def rabin_miller_test(n, level=128):
-        assert type(n) is int and n >= 5 and n & 1 == 1
+    # repeat the test a few times until the required security level is met
+    def probabilistic_primality_test(n, security_level):
+        k = (security_level >> 1) + (security_level & 1)
         r, s = 0, n - 1
         while (s & 1) == 0:
             r, s = (r + 1), (s >> 1)
-        assert type(r) is int and r >= 1
-        assert type(s) is int and s >= 1 and s & 1 == 1
-        assert n == ((2 ** r) * s) + 1
-        assert type(level) is int and level >= 1
-
-        def random_integers(n, k):
-            """
-            generates min(k, n - 3) integers in the range [2, n - 2]
-            """
-            assert type(n) is int and n >= 5 and n & 1 == 1
-            assert type(k) is int and k >= 0
-            import random
-            if k >= n - 3:
-                yield from range(2, n - 1)
-            elif n <= 0xffff:
-                yield from random.sample(range(2, n - 1), k)
-            else:
-                for _ in range(k):
-                    yield random.randint(2, n - 2)
-
-        def rabin_miller_test_one_round(n, r, s, a):
-            x = pow(a, s, n)
-            if x == 1:
-                return True
-            if x == n - 1:
-                return True
-            for j in range(1, r):
-                x = pow(x, 2, n) # x = pow(a, s * (2 ** j), n)
-                if x == 1:
-                    return False
-                if x == n - 1:
-                    return True
-            return False
-
-        k = (level >> 1) + (level & 1)
         for a in random_integers(n, k):
-            if rabin_miller_test_one_round(n, r, s, a):
+            if rabin_miller_test(n, r, s, a):
                 continue
             else:
                 return False
         return True
 
-    return rabin_miller_test(n, level=128)
+    if type(n) is not int:
+        raise TypeError('is_prime() accepts an integer greater than 1')
+    if n < 2:
+        raise ValueError('is_prime() accepts an integer greater than 1')
+    if n & 1 == 0:
+        return False
+    if n == 2 or n == 3:
+        return True
+
+    # False means n is composite
+    # True  means n is probably prime
+    return probabilistic_primality_test(n, security_level=128)
 
 
 if __name__ == '__main__':
