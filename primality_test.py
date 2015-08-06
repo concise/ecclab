@@ -19,7 +19,7 @@ def is_prime(n):
         if x == 1 or x == n - 1:
             return True
         for j in range(1, r):
-            x = pow(x, 2, n) # x = pow(a, s * (2 ** j), n)
+            x = (x * x) % n
             if x == 1:
                 return False
             if x == n - 1:
@@ -43,10 +43,10 @@ def is_prime(n):
         raise TypeError('is_prime() accepts an integer greater than 1')
     if n < 2:
         raise ValueError('is_prime() accepts an integer greater than 1')
-    if n & 1 == 0:
-        return False
     if n == 2 or n == 3:
         return True
+    if n & 1 == 0:
+        return False
 
     # False means n is composite
     # True  means n is probably prime
@@ -55,40 +55,15 @@ def is_prime(n):
 
 if __name__ == '__main__':
 
-    def p_gen():
-        from time import time
+    def generate_a_prime_number(max_bit_length=256):
         from random import randint
-        a = 0x8000000000000000000000000000000000000000000000000000000000000001
-        b = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-        candidate = None
-        t1 = time()
-        for _ in range(1000):
-            n = randint(a, b) | a
+        for _ in range(4 * max_bit_length):
+            n = randint(2, (1 << max_bit_length) - 1)
             if is_prime(n):
-                candidate = n
-                break
-        t2 = time()
-        interval = (t2-t1)*1e3
-        if candidate:
-            msg = 'We found a probable prime in {:f} milliseconds:\n0x{:064x}\n'
-            msg = msg.format(interval, candidate)
-        else:
-            msg = 'No prime was found in 1000 tries in {:f} milliseconds\n'
-            msg = msg.format(interval)
-        print(msg)
+                return n
 
-    def p_test(n):
-        from time import time
-        t1 = time()
-        result = is_prime(n)
-        t2 = time()
-        interval = (t2-t1)*1e3
-        msg = '0x{:064x}\n{} a prime, tested in {:f} milliseconds\n'
-        msg = msg.format(n, 'is probably' if result else 'is not', interval)
-        print(msg)
-
-    p_gen()
-    p_test(0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff)
-    p_test(0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551)
-    p_test(0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632553)
-    p_test(0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632549)
+    p = generate_a_prime_number(4)
+    if p:
+        print(p)
+    else:
+        print('Cannot find a prime number under limited time')
