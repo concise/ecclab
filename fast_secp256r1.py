@@ -31,14 +31,15 @@ platform by repeating the operations with random inputs 10000 times:
 
 """
 
-p  = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
-a  = -3
-b  = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
-xG = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
-yG = 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
-q  = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
-xZ = 0
-yZ = 0
+p    = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
+a    = -3
+b    = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
+bbbb = (4 * b) % p
+xG   = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
+yG   = 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
+q    = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
+xZ   = 0
+yZ   = 0
 
 def _SELF_CHECK():
     assert { int } >= set(map(type, [ p, a, b, xG, yG, q, xZ, yZ ]))
@@ -137,14 +138,11 @@ def add(xP1, yP1, xP2, yP2):
 # This is the Algorithm 5 from the paper "Memory-Constrained Implementations
 # of Elliptic Curve Cryptography in Co-Z Coordinate Representation"
 #
-def AddDblCoZ(
-    X1, X2, Z, xD,
-    _a_=a, _4b_=(4*b)%p
-):
+def AddDblCoZ(X1, X2, Z, xD):
     R2 = ( Z * Z     ) % p
-    R3 = ( _a_ * R2  ) % p
+    R3 = ( a * R2    ) % p
     R1 = ( Z * R2    ) % p
-    R2 = ( _4b_ * R1 ) % p
+    R2 = ( bbbb * R1 ) % p
     R1 = ( X2 * X2   ) % p
     R5 = ( R1 - R3   ) % p
     R4 = ( R5 * R5   ) % p
@@ -177,10 +175,7 @@ def AddDblCoZ(
 # This is the Algorithm 7 from the paper "Memory-Constrained Implementations
 # of Elliptic Curve Cryptography in Co-Z Coordinate Representation"
 #
-def RecoverFullCoordinatesCoZ(
-    X1, X2, Z, xD, yD,
-    _a_=a, _4b_=(4*b)%p
-):
+def RecoverFullCoordinatesCoZ(X1, X2, Z, xD, yD):
     R1 = ( xD * Z    ) % p
     R2 = ( X1 - R1   ) % p
     R3 = ( R2 * R2   ) % p
@@ -188,7 +183,7 @@ def RecoverFullCoordinatesCoZ(
     R2 = ( R1 * X1   ) % p
     R1 = ( X1 + R1   ) % p
     X2 = ( Z * Z     ) % p
-    R3 = ( _a_ * X2  ) % p
+    R3 = ( a * X2    ) % p
     R2 = ( R2 + R3   ) % p
     R3 = ( R2 * R1   ) % p
     R3 = ( R3 - R4   ) % p
@@ -199,7 +194,7 @@ def RecoverFullCoordinatesCoZ(
     X1 = ( R2 * X2   ) % p
     R2 = ( X2 * Z    ) % p
     Z  = ( R2 * R1   ) % p
-    R4 = ( _4b_ * R2 ) % p
+    R4 = ( bbbb * R2 ) % p
     X2 = ( R4 + R3   ) % p
     return X1, X2, Z
 
