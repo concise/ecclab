@@ -25,9 +25,9 @@ platform by repeating the operations with random inputs 10000 times:
 
     Python Function             Execution Time
     ---------------------       -----------------
-    y_candidates_from_x         0.2 milliseconds
-    add                         0.2 milliseconds
-    scalarmul                   4.0 milliseconds
+    y_candidates_from_x         0.20 milliseconds
+    add                         0.23 milliseconds
+    scalarmul                   4.05 milliseconds
 
 """
 
