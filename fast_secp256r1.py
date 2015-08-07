@@ -34,23 +34,49 @@ platform by repeating the operations with random inputs 10000 times:
 p    = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 a    = -3
 b    = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
-bbbb = (4 * b) % p
 xG   = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
 yG   = 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
 q    = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
 xZ   = 0
 yZ   = 0
+x0   = 1
+
+#
+# Choose an x0 from Fp such that for all y0 in Fp (x0, y0) is not a valid
+# non-zero point on the curve, since in the function MontgomeryLadderCoZ() we
+# are reusing AddDblCoZ() for constructing a co-Z (X1, X2, Z) triplet which
+# represents a single and a double of a point.  Otherwise, the input (x0, y0)
+# to MontgomeryLadderCoZ() will produce incorrect result.
+#
+# For example, if we have set x0 = 0 while using the curve secp256r1, then:
+#
+# W1 = (0, 0x66485c780e2f83d72433bd5d84a06bb6541c2af31dae871728bf856a174f93f4)
+# W2 = (0, 0x99b7a386f1d07c29dbcc42a27b5f9449abe3d50de25178e8d7407a95e8b06c0b)
+#
+# scalarmul(*( W1 + (2,) ))  !=  add(*( W1 + W1 ))  # True
+# scalarmul(*( W2 + (2,) ))  !=  add(*( W2 + W2 ))  # True
+#
 
 def _SELF_CHECK():
     assert { int } >= set(map(type, [ p, a, b, xG, yG, q, xZ, yZ ]))
     assert p >= 5 and is_prime(p) and p & 3 == 3
     assert q >= 2 and is_prime(q)
+
     assert (xG * xG * xG + a * xG + b - yG * yG) % p == 0
     assert (xZ * xZ * xZ + a * xZ + b - yZ * yZ) % p != 0
+
+    try:
+        y0, y1 = y_candidates_from_x(x0)
+    except ValueError:
+        pass
+    else:
+        assert False, 'x0 is a valid x-coordinate for some point on the curve'
+
     assert scalarmul(xG, yG,  0) == (xZ, yZ)
     assert scalarmul(xG, yG,  0) == add(*( scalarmul(xG, yG, -1) + (xG, yG) ))
     assert scalarmul(xG, yG, -1) == add(*( scalarmul(xG, yG, -2) + (xG, yG) ))
     assert scalarmul(xG, yG, -2) == add(*( scalarmul(xG, yG, -3) + (xG, yG) ))
+
     r = 0xb27b5dc31f118d6104b33c31dd871aab2c5f3e79736b3f82767af62e9d16b041
     s = 0x58fecaddfe0680d37ac1768ac214b4998dc788572261f8865e4b117253b2caf3
     t = r + s
@@ -121,6 +147,8 @@ def add(xP1, yP1, xP2, yP2):
         return simple_DOUBLE(xP1, yP1)
     else:
         return simple_ADD(xP1, yP1, xP2, yP2)
+
+bbbb = (4 * b) % p
 
 #
 # Given P, Q, and the x-coordinate of Q - P
@@ -203,7 +231,7 @@ def RecoverFullCoordinatesCoZ(X1, X2, Z, xD, yD):
 # Compute [k]P
 #
 def MontgomeryLadderCoZ(xP, yP, k):
-    X1, X2, Z = AddDblCoZ(0, xP, 1, xP)
+    X1, X2, Z = AddDblCoZ(x0, xP, 1, xP)
     X1 = (xP * Z) % p
     k_bit_sequence = tuple(map(int,bin(k)[2:]))
     for ki in k_bit_sequence[1:]:
