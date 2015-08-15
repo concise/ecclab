@@ -31,10 +31,7 @@ def mul(k, P):
         return x, p - y # -y % p where y != 0
     return MontgomeryLadderScalarMultiply(k, P)
 
-
-
-
-
+#-----------------------------------------------------------------------------
 
 def ecdsa_double_base_scalar_multiplication(t, u, Q):
     #assert type(t) is int and 0 <= t <= n - 1
@@ -59,10 +56,7 @@ def is_valid_point(P):
             type(P[1]) is int and 0 <= P[1] <= p - 1 and
             (P[0] * P[0] * P[0] + a * P[0] + b - P[1] * P[1]) % p == 0))
 
-
-
-
-
+#-----------------------------------------------------------------------------
 
 p = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 a = -3
@@ -109,7 +103,7 @@ def MontgomeryLadderScalarMultiply(k, P):
     for bit in msb_first_bit_string(k)[1:]:
         if bit == 1:
             X1, X2, Z = CoZDiffAddDbl(X1, X2, Z, xD=xP)
-        if bit == 0:
+        else:
             X2, X1, Z = CoZDiffAddDbl(X2, X1, Z, xD=xP)
     X, Y, Z = CoZRecover(X1, X2, Z, xD=xP, yD=yP)
     iZ = inv_mod_p(Z)
