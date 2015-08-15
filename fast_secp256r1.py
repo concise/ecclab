@@ -5,18 +5,26 @@ G = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296 \
 
 n = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
 
+def neg(P):
+    assert is_valid_point(P)
+    if P is None:
+        return None
+    else:
+        return P[0], -P[1] % p
+
 def add(P1, P2):
     assert is_valid_point(P1)
     assert is_valid_point(P2)
     if P1 is None:
         return P2
-    if P2 is None:
+    elif P2 is None:
         return P1
-    if P1[0] != P2[0]:
+    elif P1[0] != P2[0]:
         return AFFINE_POINT_ADDITION(P1, P2)
-    if P1[1] == P2[1]: # != 0
+    elif P1[1] == P2[1] != 0:
         return AFFINE_POINT_DOUBLING(P1)
-    return None
+    else:
+        return None
 
 def mul(k, P):
     assert type(k) is int
@@ -24,12 +32,12 @@ def mul(k, P):
     k = k % n
     if k == 0 or P is None:
         return None
-    if k == 1:
+    elif k == 1:
         return P
-    if k == n - 1:
-        x, y = P
-        return x, p - y # -y % p where y != 0
-    return MontgomeryLadderScalarMultiply(k, P)
+    elif k == n - 1:
+        return P[0], -P[1] % p
+    else:
+        return MontgomeryLadderScalarMultiply(k, P)
 
 #-----------------------------------------------------------------------------
 
