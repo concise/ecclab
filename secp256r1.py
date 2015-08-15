@@ -6,8 +6,8 @@ G = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296 \
 n = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
 
 def add(P1, P2):
-    #assert is_valid_point(P1)
-    #assert is_valid_point(P2)
+    assert is_valid_point(P1)
+    assert is_valid_point(P2)
     if P1 is None:
         return P2
     if P2 is None:
@@ -19,8 +19,8 @@ def add(P1, P2):
     return None
 
 def mul(k, P):
-    #assert type(k) is int
-    #assert is_valid_point(P)
+    assert type(k) is int
+    assert is_valid_point(P)
     k = k % n
     if k == 0 or P is None:
         return None
@@ -33,17 +33,17 @@ def mul(k, P):
 
 #-----------------------------------------------------------------------------
 
-#def ecdsa_double_base_scalar_multiplication(t, u, Q):
-#    #assert type(t) is int and 0 <= t <= n - 1
-#    #assert type(u) is int and 1 <= u <= n - 1
-#    #assert is_valid_point(Q) and Q is not None
+#def ecdsa_double_scalar_multiplication(t, u, Q):
+#    assert type(t) is int and 0 <= t <= n - 1
+#    assert type(u) is int and 1 <= u <= n - 1
+#    assert is_valid_point(Q) and Q is not None
 #    tG = mul(t, G)
 #    uQ = mul(u, Q)
 #    R = add(tG, uQ)
 #    return R
 
 #def y_candidates_from_x(xP):
-#    #assert type(xP) is int
+#    assert type(xP) is int
 #    y_squared = (xP * xP * xP + a * xP + b) % p
 #    y = pow(y_squared, (p + 1) // 4, p)
 #    if y * y % p != y_squared:
@@ -67,32 +67,24 @@ def inv_mod_p(n):
     return pow(n, p - 2, p)
 
 def AFFINE_POINT_ADDITION(P1, P2):
-    #assert is_valid_point(P1) and P1 is not None
-    #assert is_valid_point(P2) and P2 is not None
     x1, y1 = P1
     x2, y2 = P2
-    #assert x1 != x2
     v = ((y2 - y1) * inv_mod_p(x2 - x1)) % p
     x3 = (v * v - x1 - x2) % p
     y3 = (v * (x1 - x3) - y1) % p
     return x3, y3
 
 def AFFINE_POINT_DOUBLING(P1):
-    #assert is_valid_point(P1) and P1 is not None
     x1, y1 = P1
-    #assert y1 != 0
     w = ((3 * x1 * x1 + a) * inv_mod_p(2 * y1)) % p
     x4 = (w * w - 2 * x1) % p
     y4 = (w * (x1 - x4) - y1) % p
     return x4, y4
 
 def msb_first_bit_string(n):
-    #assert type(n) is int and n >= 0
     return tuple(map(int,bin(n)[2:]))
 
 def MontgomeryLadderScalarMultiply(k, P):
-    #assert type(k) is int and 2 <= k <= n - 2
-    #assert is_valid_point(P) and P is not None
     if k > n // 2:
         flipped = True
         k = n - k
