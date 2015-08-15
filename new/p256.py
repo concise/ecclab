@@ -111,15 +111,15 @@ def MontgomeryLadderScalarMultiply(k, P):
             X1, X2, Z = CoZDiffAddDbl(X1, X2, Z, xD=xP)
         if bit == 0:
             X2, X1, Z = CoZDiffAddDbl(X2, X1, Z, xD=xP)
-    X, Y, Z = CoZRecovery(X1, X2, Z, xD=xP, yD=yP)
+    X, Y, Z = CoZRecover(X1, X2, Z, xD=xP, yD=yP)
     iZ = inv_mod_p(Z)
     return (X * iZ) % p, ((Y * iZ) % p if not flipped else (-Y * iZ) % p)
 
 def CoZIdDbl(x, y):
-    Z  = (4 * y * y) % p
-    X1 = (Z * x) % p
-    t  = (3 * x * x + a) % p
-    X2 = (t * t - 2 * X1) % p
+    Z  = ( 4 * y * y      ) % p
+    X1 = ( Z * x          ) % p
+    t  = ( 3 * x * x + a  ) % p
+    X2 = ( t * t - 2 * X1 ) % p
     return X1, X2, Z
 
 def CoZDiffAddDbl(X1, X2, Z, xD):
@@ -155,7 +155,7 @@ def CoZDiffAddDbl(X1, X2, Z, xD):
     Z  = ( R2 * R5   ) % p
     return X1, X2, Z
 
-def CoZRecovery(X1, X2, Z, xD, yD):
+def CoZRecover(X1, X2, Z, xD, yD):
     R1 = ( xD * Z    ) % p
     R2 = ( X1 - R1   ) % p
     R3 = ( R2 * R2   ) % p
@@ -177,4 +177,3 @@ def CoZRecovery(X1, X2, Z, xD, yD):
     R4 = ( _4b_ * R2 ) % p
     X2 = ( R4 + R3   ) % p
     return X1, X2, Z
-
