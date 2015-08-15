@@ -33,22 +33,22 @@ def mul(k, P):
 
 #-----------------------------------------------------------------------------
 
-def ecdsa_double_base_scalar_multiplication(t, u, Q):
-    #assert type(t) is int and 0 <= t <= n - 1
-    #assert type(u) is int and 1 <= u <= n - 1
-    #assert is_valid_point(Q) and Q is not None
-    tG = mul(t, G)
-    uQ = mul(u, Q)
-    R = add(tG, uQ)
-    return R
+#def ecdsa_double_base_scalar_multiplication(t, u, Q):
+#    #assert type(t) is int and 0 <= t <= n - 1
+#    #assert type(u) is int and 1 <= u <= n - 1
+#    #assert is_valid_point(Q) and Q is not None
+#    tG = mul(t, G)
+#    uQ = mul(u, Q)
+#    R = add(tG, uQ)
+#    return R
 
-def y_candidates_from_x(xP):
-    #assert type(xP) is int
-    y_squared = (xP * xP * xP + a * xP + b) % p
-    y = pow(y_squared, (p + 1) // 4, p)
-    if y * y % p != y_squared:
-        raise ValueError
-    return (y, p - y) if (y & 1 == 0) else (p - y, y)
+#def y_candidates_from_x(xP):
+#    #assert type(xP) is int
+#    y_squared = (xP * xP * xP + a * xP + b) % p
+#    y = pow(y_squared, (p + 1) // 4, p)
+#    if y * y % p != y_squared:
+#        raise ValueError
+#    return (y, p - y) if (y & 1 == 0) else (p - y, y)
 
 def is_valid_point(P):
     return (P is None or (type(P) is tuple and len(P) == 2 and
