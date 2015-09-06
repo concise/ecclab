@@ -1,9 +1,11 @@
-__all__ = ('G', 'n', 'add', 'mul')
+__all__ = ('G', 'n', 'O', 'add', 'mul', 'point_from_octetstring')
 
 G = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296 \
   , 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
 
 n = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551
+
+O = None
 
 def neg(P):
     assert is_valid_point(P)
@@ -39,24 +41,42 @@ def mul(k, P):
     else:
         return MontgomeryLadderScalarMultiply(k, P)
 
+def point_from_octetstring(octetstring):
+    if type(octetstring) is not bytes:
+        raise ValueError
+    elif len(octetstring) == 1 and octetstring[0] == 0x00:
+        return None
+    elif len(octetstring) == 65 and octetstring[0] == 0x04:
+        x = int.from_bytes(octetstring[1:33], byteorder='big', signed=False)
+        y = int.from_bytes(octetstring[33:65], byteorder='big', signed=False)
+        assert is_valid_point((x, y))
+        return x, y
+    elif len(octetstring) == 33 and octetstring[0] in {0x02, 0x03}:
+        y_parity = octetstring[0] & 1
+        x = int.from_bytes(octetstring[1:33], byteorder='big', signed=False)
+        y = y_candidates_from_x(x)[y_parity]
+        return x, y
+    else:
+        raise ValueError
+
 #-----------------------------------------------------------------------------
 
-#def ecdsa_double_scalar_multiplication(t, u, Q):
-#    assert type(t) is int and 0 <= t <= n - 1
-#    assert type(u) is int and 1 <= u <= n - 1
-#    assert is_valid_point(Q) and Q is not None
-#    tG = mul(t, G)
-#    uQ = mul(u, Q)
-#    R = add(tG, uQ)
-#    return R
+def ecdsa_double_scalar_multiplication(t, u, Q):
+    assert type(t) is int and 0 <= t <= n - 1
+    assert type(u) is int and 1 <= u <= n - 1
+    assert is_valid_point(Q) and Q is not None
+    tG = mul(t, G)
+    uQ = mul(u, Q)
+    R = add(tG, uQ)
+    return R
 
-#def y_candidates_from_x(xP):
-#    assert type(xP) is int
-#    y_squared = (xP * xP * xP + a * xP + b) % p
-#    y = pow(y_squared, (p + 1) // 4, p)
-#    if y * y % p != y_squared:
-#        raise ValueError
-#    return (y, p - y) if (y & 1 == 0) else (p - y, y)
+def y_candidates_from_x(xP):
+    assert type(xP) is int
+    y_squared = (xP * xP * xP + a * xP + b) % p
+    y = pow(y_squared, (p + 1) // 4, p)
+    if y * y % p != y_squared:
+        raise ValueError
+    return (y, p - y) if (y & 1 == 0) else (p - y, y)
 
 def is_valid_point(P):
     return (P is None or (type(P) is tuple and len(P) == 2 and
