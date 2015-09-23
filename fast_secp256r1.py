@@ -1,4 +1,4 @@
-__all__ = ('G', 'n', 'O', 'add', 'mul', 'point_from_octetstring')
+#__all__ = ('G', 'n', 'O', 'add', 'mul', 'point_from_octetstring')
 
 G = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296 \
   , 0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
@@ -129,6 +129,27 @@ def MontgomeryLadderScalarMultiply(k, P):
     iZ = inv_mod_p(Z)
     return (X * iZ) % p, ((Y * iZ) % p if not flipped else (-Y * iZ) % p)
 
+def MontgomeryLadderScalarMultiply_ver2(k, P):
+    if k > n // 2:
+        flipped = True
+        k = n - k
+    else:
+        flipped = False
+    xP, yP = P
+    X1, X2, Z = CoZIdDbl(xP, yP)
+    xD = xP
+    TD = (xD * Z) % p
+    Ta = (a * Z * Z) % p
+    Tb = (4 * b * Z * Z * Z) % p
+    for bit in msb_first_bit_string(k)[1:]:
+        if bit == 1:
+            X1, X2, TD, Ta, Tb = CoZDiffAddDbl_alg6(X1, X2, TD, Ta, Tb)
+        else:
+            X2, X1, TD, Ta, Tb = CoZDiffAddDbl_alg6(X2, X1, TD, Ta, Tb)
+    X, Y, Z = CoZRecover_alg8(X1, X2, TD, Ta, Tb, xD=xP, yD=yP)
+    iZ = inv_mod_p(Z)
+    return (X * iZ) % p, ((Y * iZ) % p if not flipped else (-Y * iZ) % p)
+
 def CoZIdDbl(x, y):
     Z  = ( 4 * y * y      ) % p
     X1 = ( Z * x          ) % p
@@ -190,4 +211,65 @@ def CoZRecover(X1, X2, Z, xD, yD):
     Z  = ( R2 * R1   ) % p
     R4 = ( _4b_ * R2 ) % p
     X2 = ( R4 + R3   ) % p
+    return X1, X2, Z
+
+
+
+
+
+def CoZDiffAddDbl_alg6(X1, X2, TD, Ta, Tb):
+    R2  = (X1 - X2) % p
+    R1  = (R2 * R2) % p
+    R2  = (X2 * X2) % p
+    R3  = (R2 - Ta) % p
+    R4  = (R3 * R3) % p
+    R5  = (X2 + X2) % p
+    R3  = (R5 * Tb) % p
+    R4  = (R4 - R3) % p
+    R5  = (R5 + R5) % p
+    R2  = (R2 + Ta) % p
+    R3  = (R5 * R2) % p
+    R3  = (R3 + Tb) % p
+    R5  = (X1 + X2) % p
+    R2  = (R2 + Ta) % p
+    R2  = (R2 - R1) % p
+    X2  = (X1 * X1) % p
+    R2  = (R2 + X2) % p
+    X2  = (R5 * R2) % p
+    X2  = (X2 + Tb) % p
+    X1  = (R3 * X2) % p
+    X2  = (R1 * R4) % p
+    R2  = (R1 * R3) % p
+    R3  = (R2 * Tb) % p
+    R4  = (R2 * R2) % p
+    R1  = (TD * R2) % p
+    R2  = (Ta * R4) % p
+    Tb  = (R3 * R4) % p
+    X1  = (X1 - R1) % p
+    TD  = R1
+    Ta  = R2
+    return X1, X2, TD, Ta, Tb
+
+def CoZRecover_alg8(X1, X2, TD, Ta, Tb, xD, yD):
+    R1 = (TD * X1) % p
+    R2 = (R1 + Ta) % p
+    R3 = (X1 + TD) % p
+    R4 = (R2 * R3) % p
+    R3 = (X1 - TD) % p
+    R2 = (R3 * R3) % p
+    R3 = (R2 * X2) % p
+    R4 = (R4 - R3) % p
+    R4 = (R4 + R4) % p
+    R4 = (R4 + Tb) % p
+    R2 = (TD * TD) % p
+    R3 = (X1 * R2) % p
+    R1 = (xD * R3) % p
+    R3 = (yD + yD) % p
+    R3 = (R3 + R3) % p
+    X1 = (R3 * R1) % p
+    R1 = (R2 * TD) % p
+    Z  = (R3 * R1) % p
+    R2 = (xD * xD) % p
+    R3 = (R2 * xD) % p
+    X2 = (R3 * R4) % p
     return X1, X2, Z
