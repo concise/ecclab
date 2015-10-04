@@ -1,3 +1,4 @@
+import sys
 #__all__ = ('G', 'n', 'O', 'add', 'mul', 'point_from_octetstring')
 
 G = 0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296 \
@@ -39,7 +40,7 @@ def mul(k, P):
     elif k == n - 1:
         return P[0], -P[1] % p
     else:
-        return MontgomeryLadderScalarMultiply(k, P)
+        return MontgomeryLadderScalarMultiply_ver2(k, P)
 
 def point_from_octetstring(octetstring):
     if type(octetstring) is not bytes:
@@ -89,6 +90,7 @@ def is_valid_point(P):
 p = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 a = -3
 b = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
+
 _4b_ = 4 * b % p
 
 def inv_mod_p(n):
@@ -216,38 +218,256 @@ def CoZRecover(X1, X2, Z, xD, yD):
 
 
 
+def ecdsa_verify_signature(publickey, message, signature):
+    assert type(publickey) is bytes
+    assert type(message) is bytes
+    assert type(signature) is bytes
+
+    try:
+        Q = point_from_octetstring(publickey)
+    except ValueError:
+        return False
+    if Q is None:
+        return False
+
+    try:
+        r, s = parse_signature(signature)
+    except ASN1Error:
+        return False
+    except ValueError:
+        return False
+
+    e = message_preprocessing(message)
+
+    # Compute si = (s^(-1) mod n) and then compute (t, u) = (e*si, r*si)
+    si = pow(s, n - 2, n)
+    t = (e * si) % n
+    u = (r * si) % n
+
+    # Compute R = (t*G + u*Q)
+    R = ecdsa_double_scalar_multiplication(t, u, Q)
+    if R is None:
+        return False
+
+    # Compute r2 = the x coordinate of R mode n
+    r2 = R[0] % n
+    return r == r2
+
+def do_sha256_using_openssl(rawdata):
+    import subprocess
+    p1 = subprocess.Popen(('openssl', 'dgst', '-sha256'),
+                          stdin=subprocess.PIPE,
+                          stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(('awk', '{print $NF}'),
+                          stdin=p1.stdout,
+                          stdout=subprocess.PIPE)
+    p1.stdin.write(rawdata)
+    p1.stdin.close()
+    result_bytes = p2.stdout.read().rstrip().decode()
+    return bytes.fromhex(result_bytes)
+    #
+    # echo 00 | xxd -p -r | openssl dgst -sha256 | awk '{print $NF}'
+    #
+
+def mysha256(msg):
+    return do_sha256_using_openssl(msg)
+    #
+    # hex readable string -> octets
+    #   bytes.fromhex('0001') == b'\x00\x01'
+    #
+    # octets -> hex readable string
+    #   import codecs
+    #   codecs.encode(b'\x00\x01', 'hex') == '0001'
+    #
+    import hashlib
+    digester = hashlib.sha256()
+    digester.update(msg)
+    digest = digester.digest()
+    return digest
+
+def message_preprocessing(msg):
+    digest = mysha256(msg)
+    return octet_string_to_unsigned_integer(digest)
+
+def first_octet_num_value_in_an_octet_string(octet):
+    return octet[0]
+
+def octet_string_to_unsigned_integer(octet_string):
+    import codecs
+    return int.from_bytes(octet_string, byteorder='big')
+    #return int(codecs.encode(octet_string, 'hex'), 16)
+
+
+def parse_signature(sig):
+    r, s = parse_ASN1_SEQUENCE_of_two_INTEGERs(sig)
+    if (1 <= r <= n - 1) and (1 <= s <= n - 1):
+        return r, s
+    else:
+        raise ValueError
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class ASN1Error(BaseException):
+    pass
+
+def parse_ASN1_SEQUENCE_of_two_INTEGERs(octetstring):
+    sequence_elements = parse_ASN1_SEQUENCE(octetstring)
+    if len(sequence_elements) != 2:
+        raise ASN1Error
+    octets1, octets2 = sequence_elements
+    int1 = parse_ASN1_INTEGER(octets1)
+    int2 = parse_ASN1_INTEGER(octets2)
+    return int1, int2
+
+def parse_ASN1_SEQUENCE(octetstring):
+    if type(octetstring) is not bytes:
+        raise ASN1Error
+    T, L, V, X = destruct_leading_TLV_octets_from(octetstring)
+    if len(X) != 0:
+        raise ASN1Error
+    if T != b'\x30':
+        raise ASN1Error
+    sequence_elements = ()
+    X = V
+    while len(X) != 0:
+        T, L, V, X = destruct_leading_TLV_octets_from(X)
+        sequence_elements += (T + L + V,)
+    return sequence_elements
+
+def parse_ASN1_BITSTRING_as_octet_string(octetstring):
+    if type(octetstring) is not bytes:
+        raise ASN1Error
+    T, L, V, X = destruct_leading_TLV_octets_from(octetstring)
+    if len(X) != 0:
+        raise ASN1Error
+    if T != b'\x03':
+        raise ASN1Error
+    if V[0] != 0x00:
+        raise ASN1Error
+    return V[1:]
+
+# ----------------------------------------------------------------------------
+
+def parse_ASN1_INTEGER(octetstring):
+    if type(octetstring) is not bytes:
+        raise ASN1Error
+    T, L, V, X = destruct_leading_TLV_octets_from(octetstring)
+    if len(X) != 0:
+        raise ASN1Error
+    if T != b'\x02':
+        raise ASN1Error
+    if len(V) >= 2 and V[0] == 0x00 and V[1] <= 0x7f:
+        raise ASN1Error
+    return octet_string_to_signed_integer(V)
+
+def octet_string_to_signed_integer(octet_string):
+    assert type(octet_string) is bytes
+
+    l = len(octet_string)
+    if l == 0:
+        return 0
+
+    v = first_octet_num_value_in_an_octet_string(octet_string)
+    if v <= 0x7f:
+        return octet_string_to_unsigned_integer(octet_string)
+    else:
+        return octet_string_to_unsigned_integer(octet_string) - (1 << (8 * l))
+
+
+def destruct_leading_TLV_octets_from(stream):
+    X = stream
+    T, X = destruct_leading_T_octet_from(X)
+    L, X = destruct_leading_L_octets_from(X)
+    V, X = destruct_leading_V_octets_from(X, L=L)
+    return T, L, V, X
+
+def destruct_leading_T_octet_from(stream):
+    if len(stream) == 0:
+        raise ASN1Error
+    else:
+        return stream[:1], stream[1:]
+
+def destruct_leading_L_octets_from(stream):
+    if len(stream) == 0:
+        raise ASN1Error
+    elif stream[0] < 0x80:
+        return stream[:1], stream[1:]
+    elif stream[0] == 0x80:
+        raise ASN1Error
+    elif stream[0] > 0x80:
+        return destruct_leading_long_L_octets_from(stream)
+
+def destruct_leading_long_L_octets_from(stream):
+    length = stream[0] - 0x7f
+    if len(stream) < length:
+        raise ASN1Error
+    L, _ = stream[:length], stream[length:]
+    if (length == 2 and L[1] >= 0x80) or (length > 2 and L[1] != 0x00):
+        return L, _
+    else:
+        raise ASN1Error
+
+def destruct_leading_V_octets_from(stream, L):
+    length = get_length_from_L_octets(L)
+    if len(stream) < length:
+        raise ASN1Error
+    else:
+        return stream[:length], stream[length:]
+
+def get_length_from_L_octets(L):
+    if len(L) == 0:
+        raise ASN1Error
+    elif len(L) == 1 and L[0] <= 0x7f:
+        return L[0]
+    elif len(L) == 2 and L[0] == 0x81 and L[1] >= 0x80:
+        return L[1]
+    elif len(L) == L[0] - 0x7f and L[0] >= 0x82 and L[1] != 0x00:
+        return octet_string_to_unsigned_integer(L[1:])
+    else:
+        raise ASN1Error
 
 def CoZDiffAddDbl_alg6(X1, X2, TD, Ta, Tb):
-    R2  = (X1 - X2) % p
-    R1  = (R2 * R2) % p
-    R2  = (X2 * X2) % p
-    R3  = (R2 - Ta) % p
-    R4  = (R3 * R3) % p
-    R5  = (X2 + X2) % p
-    R3  = (R5 * Tb) % p
-    R4  = (R4 - R3) % p
-    R5  = (R5 + R5) % p
-    R2  = (R2 + Ta) % p
-    R3  = (R5 * R2) % p
-    R3  = (R3 + Tb) % p
-    R5  = (X1 + X2) % p
-    R2  = (R2 + Ta) % p
-    R2  = (R2 - R1) % p
-    X2  = (X1 * X1) % p
-    R2  = (R2 + X2) % p
-    X2  = (R5 * R2) % p
-    X2  = (X2 + Tb) % p
-    X1  = (R3 * X2) % p
-    X2  = (R1 * R4) % p
-    R2  = (R1 * R3) % p
-    R3  = (R2 * Tb) % p
-    R4  = (R2 * R2) % p
-    R1  = (TD * R2) % p
-    R2  = (Ta * R4) % p
-    Tb  = (R3 * R4) % p
-    X1  = (X1 - R1) % p
-    TD  = R1
-    Ta  = R2
+    R2 = (X1 - X2) % p
+    R1 = (R2 * R2) % p
+    R2 = (X2 * X2) % p
+    R3 = (R2 - Ta) % p
+    R4 = (R3 * R3) % p
+    R5 = (X2 + X2) % p
+    R3 = (R5 * Tb) % p
+    R4 = (R4 - R3) % p
+    R5 = (R5 + R5) % p
+    R2 = (R2 + Ta) % p
+    R3 = (R5 * R2) % p
+    R3 = (R3 + Tb) % p
+    R5 = (X1 + X2) % p
+    R2 = (R2 + Ta) % p
+    R2 = (R2 - R1) % p
+    X2 = (X1 * X1) % p
+    R2 = (R2 + X2) % p
+    X2 = (R5 * R2) % p
+    X2 = (X2 + Tb) % p
+    X1 = (R3 * X2) % p
+    X2 = (R1 * R4) % p
+    R2 = (R1 * R3) % p
+    R3 = (R2 * Tb) % p
+    R4 = (R2 * R2) % p
+    R1 = (TD * R2) % p
+    R2 = (Ta * R4) % p
+    Tb = (R3 * R4) % p
+    X1 = (X1 - R1) % p
+    TD = R1
+    Ta = R2
     return X1, X2, TD, Ta, Tb
 
 def CoZRecover_alg8(X1, X2, TD, Ta, Tb, xD, yD):
@@ -273,3 +493,29 @@ def CoZRecover_alg8(X1, X2, TD, Ta, Tb, xD, yD):
     R3 = (R2 * xD) % p
     X2 = (R3 * R4) % p
     return X1, X2, Z
+
+def main():
+    if len(sys.argv) != 4:
+        print('Please provide three octet strings:' +
+              ' 1) public key, 2) message, and 3) signature ' +
+              'all in hex format')
+        return
+    try:
+        key = bytes.fromhex(sys.argv[1])
+        msg = bytes.fromhex(sys.argv[2])
+        sig = bytes.fromhex(sys.argv[3])
+        import time
+        a = time.time()
+        for i in range(1000):
+            sig_is_valid = ecdsa_verify_signature(key, msg, sig)
+        print(time.time() - a)
+        if sig_is_valid is True:
+            print('true')
+        else:
+            print('false')
+    except ValueError:
+        print('false')
+
+
+if __name__ == '__main__':
+    main()
