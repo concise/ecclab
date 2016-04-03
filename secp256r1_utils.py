@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 p  = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff
 a  = 0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc
 b  = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b
@@ -494,7 +496,9 @@ def ecdsa_verify_signature(publickey, message, signature):
         pass
     except asn1_Error:
         pass
-    raise ecdsa_Error
+    except:
+        pass
+    return False
 
 def ecdsa_compress_publickey(publickey):
     assert type(publickey) is bytes
@@ -785,7 +789,29 @@ def ecdsa_generate_signature(secretkey, message):
         pass
     raise ecdsa_Error
 
-#if __name__ == '__main__':
-#    def B2H(i): import codecs; return codecs.encode(i, 'hex').decode();
-#    print(B2H(ecdsa_secretkey_to_publickey(bytes.fromhex('C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721'))))
-#    print(B2H(ecdsa_generate_signature(bytes.fromhex('C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721'), b'sample')))
+def print_usage():
+    import sys
+    print('\nCmdline argument error!\n\nUsage:\n\t./secp256r1_utils.py <publickey_hex> <message_hex> <signature_hex>\n', file=sys.stderr)
+
+def get_three_hexstring_from_cmdline():
+    import sys
+    try:
+        publickey = bytes.fromhex(sys.argv[1])
+        message   = bytes.fromhex(sys.argv[2])
+        signature = bytes.fromhex(sys.argv[3])
+    except:
+        print_usage()
+        sys.exit(1)
+    return publickey, message, signature
+
+def main():
+    publickey, message, signature = get_three_hexstring_from_cmdline()
+
+    sig_is_valid = ecdsa_verify_signature(publickey, message, signature)
+    if sig_is_valid:
+        print('Signature is valid.')
+    else:
+        print('Signature is WRONG!')
+
+if __name__ == '__main__':
+    main()
